@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Akirapa Admin Panel</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        .admin-container {
+            display: flex;
+            height: 100vh;
+            background: var(--bg-primary);
+        }
+        .admin-sidebar {
+            width: 240px;
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border-color);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+        .admin-sidebar .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--accent-green);
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .admin-nav {
+            flex: 1;
+        }
+        .admin-nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            color: var(--text-secondary);
+            transition: all 0.2s;
+            margin-bottom: 4px;
+        }
+        .admin-nav-item:hover {
+            background: var(--bg-hover);
+            color: var(--text-primary);
+        }
+        .admin-nav-item.active {
+            background: var(--bg-tertiary);
+            color: var(--accent-green);
+        }
+        .admin-content {
+            flex: 1;
+            padding: 24px;
+            overflow-y: auto;
+        }
+        .admin-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        .stat-card {
+            background: var(--bg-secondary);
+            padding: 20px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+        }
+        .stat-card .number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        .stat-card .label {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+        .conversation-view {
+            background: var(--bg-secondary);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+        .conversation-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .participant-tag {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: var(--radius-full);
+            font-size: 0.75rem;
+            background: var(--bg-tertiary);
+            margin-right: 4px;
+        }
+        .role-badge.admin-view {
+            background: rgba(245, 158, 11, 0.15);
+            color: #f59e0b;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+        .message-preview {
+            margin-top: 8px;
+            padding: 8px;
+            background: var(--bg-tertiary);
+            border-radius: var(--radius-sm);
+        }
+        .user-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .user-item:hover {
+            background: var(--bg-hover);
+        }
+        .log-item {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.9rem;
+        }
+        .log-item .action {
+            font-weight: 600;
+            color: var(--accent-green);
+        }
+        .log-item .time {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+    </style>
+</head>
+<body>
+
+<div id="authContainer" class="auth-container hidden">
+    <div class="auth-card">
+        <div class="auth-brand">
+            <div class="auth-brand-logo">
+                <i class="fa-solid fa-shield-halved"></i>
+            </div>
+            <h1 class="auth-title">Admin Access</h1>
+            <p class="auth-subtitle">Secure Admin Panel</p>
+        </div>
+        <form id="adminLoginForm" onsubmit="handleAdminLogin(event)">
+            <div class="form-group">
+                <label class="form-label">Email Address</label>
+                <input type="email" id="adminEmail" class="form-input" required>
+            </div>
+            <div class="form-group">
+  <label class="form-label" for="loginPassword">Password</label>
+  <div class="password-input-wrapper">
+    <input type="password" id="loginPassword" class="form-input password-input" placeholder="••••••••" required>
+    <button type="button" class="password-toggle-btn" onclick="togglePasswordVisibility('loginPassword', this)" tabindex="-1">
+      <i class="fa-regular fa-eye"></i>
+    </button>
+  </div>
+</div>
+            <button type="submit" class="btn-primary">Sign In as Admin</button>
+        </form>
+    </div>
+</div>
+
+<div id="adminApp" class="admin-container hidden">
+    <aside class="admin-sidebar">
+        <div class="logo">
+            <i class="fa-solid fa-shield-halved"></i>
+            Akirapa Admin
+        </div>
+        <nav class="admin-nav">
+            <div class="admin-nav-item active" onclick="switchAdminView('dashboard')">
+                <i class="fa-solid fa-chart-bar"></i> Dashboard
+            </div>
+            <div class="admin-nav-item" onclick="switchAdminView('conversations')">
+                <i class="fa-solid fa-comments"></i> Conversations
+            </div>
+            <div class="admin-nav-item" onclick="switchAdminView('users')">
+                <i class="fa-solid fa-users"></i> Users
+            </div>
+            <div class="admin-nav-item" onclick="switchAdminView('audit')">
+                <i class="fa-solid fa-clock-rotate-left"></i> Audit Logs
+            </div>
+        </nav>
+        <div style="margin-top: auto;">
+            <div class="admin-nav-item" onclick="handleLogout()">
+                <i class="fa-solid fa-right-from-bracket"></i> Sign Out
+            </div>
+        </div>
+    </aside>
+
+    <main class="admin-content" id="adminContent">
+        <div id="view-dashboard">
+            <h2>Dashboard</h2>
+            <div class="admin-stats" id="dashboardStats">
+                <div class="stat-card">
+                    <div class="number" id="statUsers">0</div>
+                    <div class="label">Total Users</div>
+                </div>
+                <div class="stat-card">
+                    <div class="number" id="statMessages">0</div>
+                    <div class="label">Total Messages</div>
+                </div>
+                <div class="stat-card">
+                    <div class="number" id="statConversations">0</div>
+                    <div class="label">Active Conversations</div>
+                </div>
+            </div>
+        </div>
+
+        <div id="view-conversations" class="hidden">
+            <h2>All Conversations</h2>
+            <div id="conversationsList"></div>
+        </div>
+
+        <div id="view-users" class="hidden">
+            <h2>Users</h2>
+            <div id="usersList"></div>
+        </div>
+
+        <div id="view-audit" class="hidden">
+            <h2>Audit Logs</h2>
+            <div id="auditLogsList"></div>
+        </div>
+    </main>
+</div>
+
+<script src="js/supabase-client.js"></script>
+<script>
+let currentAdmin = null;
+let currentView = 'dashboard';
+
+async function checkAdminSession() {
+    const session = await window.initSupabase();
+    const user = window.getCurrentUser();
+    if (session && user && user.user_metadata?.role === 'ADMIN') {
+        currentAdmin = user;
+        document.getElementById('adminApp').classList.remove('hidden');
+        document.getElementById('authContainer').classList.add('hidden');
+        loadDashboard();
+    } else {
+        document.getElementById('adminApp').classList.add('hidden');
+        document.getElementById('authContainer').classList.remove('hidden');
+    }
+}
+
+async function handleAdminLogin(e) {
+    e.preventDefault();
+    const email = document.getElementById('adminEmail').value;
+    const password = document.getElementById('adminPassword').value;
+    try {
+        await window.signInWithSupabase(email, password);
+        const user = window.getCurrentUser();
+        if (user?.user_metadata?.role !== 'ADMIN') {
+            alert('Admin access required');
+            await window.signOutWithSupabase();
+            return;
+        }
+        currentAdmin = user;
+        document.getElementById('adminApp').classList.remove('hidden');
+        document.getElementById('authContainer').classList.add('hidden');
+        loadDashboard();
+    } catch (err) {
+        alert('Login failed: ' + err.message);
+    }
+}
+
+async function loadDashboard() {
+    try {
+        const [usersRes, convRes] = await Promise.all([
+            fetch('/api/admin/users', {
+                headers: { 'Authorization': `Bearer ${window.currentSession?.access_token}` }
+            }),
+            fetch('/api/messages/conversations', {
+                headers: { 'Authorization': `Bearer ${window.currentSession?.access_token}` }
+            })
+        ]);
+
+        const users = await usersRes.json();
+        const conversations = await convRes.json();
+
+        document.getElementById('statUsers').textContent = users.users?.length || 0;
+        document.getElementById('statConversations').textContent = conversations.conversations?.length || 0;
+    } catch (err) {
+        console.error('Dashboard error:', err);
+    }
+}
+
+async function loadUsers() {
+    try {
+        const response = await fetch('/api/admin/users', {
+            headers: { 'Authorization': `Bearer ${window.currentSession?.access_token}` }
+        });
+        const data = await response.json();
+        const container = document.getElementById('usersList');
+        if (!data.users || data.users.length === 0) {
+            container.innerHTML = '<p style="color: var(--text-secondary);">No users found.</p>';
+            return;
+        }
+        container.innerHTML = data.users.map(user => `
+            <div class="user-item">
+                <div>
+                    <strong>${user.name}</strong>
+                    <span class="role-badge ${user.role}">${user.role}</span>
+                    ${user.online_status ? '<span style="color: #00a884;">● Online</span>' : '<span style="color: var(--text-muted);">○ Offline</span>'}
+                </div>
+                <span style="font-size: 0.8rem; color: var(--text-secondary);">
+                    ${user.email || 'No email'}
+                </span>
+            </div>
+        `).join('');
+    } catch (err) {
+        console.error('Load users error:', err);
+    }
+}
+
+async function loadConversationsAdmin() {
+    try {
+        const response = await fetch('/api/messages/conversations', {
+            headers: { 'Authorization': `Bearer ${window.currentSession?.access_token}` }
+        });
+        const data = await response.json();
+        const container = document.getElementById('conversationsList');
+        if (!data.conversations || data.conversations.length === 0) {
+            container.innerHTML = '<p style="color: var(--text-secondary);">No conversations found.</p>';
+            return;
+        }
+        container.innerHTML = data.conversations.map(conv => `
+            <div class="conversation-view">
+                <div class="conversation-header">
+                    <div>
+                        <strong>${conv.name}</strong>
+                        ${conv.participants?.map(p => `<span class="participant-tag role-badge ${p.role}">${p.name} (${p.role})</span>`).join('')}
+                    </div>
+                    <span style="font-size: 0.8rem; color: var(--text-secondary);">
+                        ${new Date(conv.last_message_time || conv.created_at).toLocaleString()}
+                    </span>
+                </div>
+                <div class="message-preview">
+                    ${conv.last_message || 'No messages yet'}
+                </div>
+            </div>
+        `).join('');
+    } catch (err) {
+        console.error('Load conversations error:', err);
+    }
+}
+
+async function loadAuditLogs() {
+    try {
+        const response = await fetch('/api/admin/audit-logs', {
+            headers: { 'Authorization': `Bearer ${window.currentSession?.access_token}` }
+        });
+        const data = await response.json();
+        const container = document.getElementById('auditLogsList');
+        if (!data.logs || data.logs.length === 0) {
+            container.innerHTML = '<p style="color: var(--text-secondary);">No audit logs found.</p>';
+            return;
+        }
+        container.innerHTML = data.logs.map(log => `
+            <div class="log-item">
+                <div>
+                    <span class="action">${log.action}</span>
+                    by ${log.admin?.name || 'Unknown'}
+                    <span class="time">${new Date(log.created_at).toLocaleString()}</span>
+                </div>
+                ${log.details ? `<div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 4px;">${JSON.stringify(log.details)}</div>` : ''}
+            </div>
+        `).join('');
+    } catch (err) {
+        console.error('Load audit logs error:', err);
+    }
+}
+
+function switchAdminView(view) {
+    currentView = view;
+    document.querySelectorAll('.admin-nav-item').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.admin-nav-item').forEach(el => {
+        if (el.textContent.trim().toLowerCase().includes(view)) {
+            el.classList.add('active');
+        }
+    });
+    document.querySelectorAll('[id^="view-"]').forEach(el => el.classList.add('hidden'));
+    document.getElementById(`view-${view}`).classList.remove('hidden');
+    
+    switch(view) {
+        case 'dashboard': loadDashboard(); break;
+        case 'users': loadUsers(); break;
+        case 'audit': loadAuditLogs(); break;
+        case 'conversations': loadConversationsAdmin(); break;
+    }
+}
+
+async function handleLogout() {
+    try {
+        await window.signOutWithSupabase();
+        currentAdmin = null;
+        document.getElementById('adminApp').classList.add('hidden');
+        document.getElementById('authContainer').classList.remove('hidden');
+    } catch (err) {
+        console.error('Logout error:', err);
+    }
+}
+
+document.addEventListener('DOMContentLoaded', checkAdminSession);
+</script>
+</body>
+</html>

@@ -3,9 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Akirapa Care Messaging - WhatsApp Web App</title>
+  <title>Akirapa Care Messaging - Real-time Chat App</title>
   <link rel="stylesheet" href="styles.css">
-  <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
@@ -14,10 +15,13 @@
     <div class="auth-card">
       <div class="auth-brand">
         <div class="auth-brand-logo">
-          <i class="ri-whatsapp-line"></i>
+          <i class="fa-brands fa-whatsapp"></i>
         </div>
         <h1 class="auth-title">Akirapa Connect</h1>
-        <p class="auth-subtitle">Standalone Care Pod Messaging & Audio Hub</p>
+        <p class="auth-subtitle">Secure Care Pod Messaging & Audio Hub</p>
+        <p style="font-size: 0.7rem; color: var(--text-muted); margin-top: 4px;">
+          <i class="fa-solid fa-lock"></i> End-to-End Encrypted • Real-time
+        </p>
       </div>
 
       <div class="auth-tabs">
@@ -35,15 +39,23 @@
           <label class="form-label" for="loginPassword">Password</label>
           <input type="password" id="loginPassword" class="form-input" placeholder="••••••••" required>
         </div>
-        <div class="form-group">
-          <label class="form-label">Sign in as Role (Optional Quick Selection)</label>
-          <select id="loginRole" class="form-select">
-            <option value="CAREGIVER">Caregiver</option>
-            <option value="FAMILY_MEMBER">Client / Family Member</option>
-            <option value="ADMIN">Admin / Coordinator</option>
-          </select>
+        
+        <!-- Remember Me Checkbox -->
+        <div class="form-group" style="display: flex; align-items: center; gap: 10px;">
+          <input type="checkbox" id="rememberMe" checked style="width: 18px; height: 18px; cursor: pointer;">
+          <label for="rememberMe" style="font-size: 0.9rem; color: var(--text-secondary); cursor: pointer;">
+            <i class="fa-regular fa-circle-check"></i> Remember me on this device
+          </label>
         </div>
-        <button type="submit" class="btn-primary" id="loginBtnSubmit">Sign In to Chat</button>
+
+        <button type="submit" class="btn-primary" id="loginBtnSubmit">
+          <i class="fa-solid fa-right-to-bracket"></i> Sign In to Chat
+        </button>
+        
+        <!-- Session persistence indicator -->
+        <div style="margin-top: 12px; text-align: center; font-size: 0.75rem; color: var(--text-muted);">
+          <i class="fa-solid fa-shield-halved"></i> Session will persist until you sign out
+        </div>
       </form>
 
       <!-- Register Form -->
@@ -52,11 +64,11 @@
           <label class="form-label">Choose Account Role</label>
           <div class="role-selector">
             <div class="role-option selected" id="roleOptCaregiver" onclick="selectRegisterRole('CAREGIVER')">
-              <i class="ri-user-heart-line" style="font-size: 1.2rem; color: var(--role-caregiver);"></i>
+              <i class="fa-regular fa-heart" style="font-size: 1.2rem; color: var(--role-caregiver);"></i>
               <div class="role-option-title">Caregiver</div>
             </div>
             <div class="role-option" id="roleOptFamily" onclick="selectRegisterRole('FAMILY_MEMBER')">
-              <i class="ri-user-smile-line" style="font-size: 1.2rem; color: var(--role-family);"></i>
+              <i class="fa-regular fa-user" style="font-size: 1.2rem; color: var(--role-family);"></i>
               <div class="role-option-title">Client / Family</div>
             </div>
           </div>
@@ -87,11 +99,12 @@
           <input type="text" id="regCode" class="form-input" placeholder="Enter OTP code" value="123456" required>
         </div>
 
-        <button type="submit" class="btn-primary" id="regBtnSubmit">Create Account</button>
+        <button type="submit" class="btn-primary" id="regBtnSubmit">
+          <i class="fa-solid fa-user-plus"></i> Create Account
+        </button>
       </form>
     </div>
   </div>
-
 
   <!-- ================= MAIN CHAT APP VIEW ================= -->
   <div id="appContainer" class="app-container hidden">
@@ -107,18 +120,18 @@
           </div>
         </div>
         <div class="header-actions">
-          <button class="icon-btn" title="Toggle Light/Dark Theme" onclick="toggleTheme()">
-            <i class="ri-moon-line" id="themeIcon"></i>
+          <button class="icon-btn" title="Toggle Theme" onclick="toggleTheme()">
+            <i class="fa-regular fa-moon" id="themeIcon"></i>
           </button>
           <button class="icon-btn" title="Sign Out" onclick="handleLogout()">
-            <i class="ri-logout-box-r-line"></i>
+            <i class="fa-solid fa-right-from-bracket"></i>
           </button>
         </div>
       </header>
 
       <div class="sidebar-search">
         <div class="search-input-wrap">
-          <i class="ri-search-line" style="color: var(--text-secondary);"></i>
+          <i class="fa-solid fa-magnifying-glass" style="color: var(--text-secondary);"></i>
           <input type="text" id="searchInput" placeholder="Search conversations..." oninput="filterConversations()">
         </div>
       </div>
@@ -135,27 +148,29 @@
       <header class="chat-header" id="chatHeader">
         <div class="chat-header-info">
           <button class="icon-btn mobile-only" onclick="toggleMobileSidebar()" title="Back to Threads">
-            <i class="ri-arrow-left-line"></i>
+            <i class="fa-solid fa-arrow-left"></i>
           </button>
           <div class="avatar" id="activeChatAvatar">
-            <i class="ri-team-line"></i>
+            <i class="fa-solid fa-users"></i>
           </div>
           <div>
             <div class="chat-title" id="activeChatTitle">Select a Conversation</div>
-            <div class="chat-subtitle" id="activeChatSubtitle">Care Pod Communication Thread</div>
+            <div class="chat-subtitle" id="activeChatSubtitle">Secure Care Communication</div>
           </div>
         </div>
 
         <div class="header-actions">
-          <span class="role-badge CAREGIVER" id="activeChatSecurityBadge">AES-256 ENCRYPTED</span>
+          <span class="role-badge CAREGIVER" id="activeChatSecurityBadge">
+            <i class="fa-solid fa-lock"></i> AES-256
+          </span>
         </div>
       </header>
 
       <!-- Chat Body / Messages Feed -->
       <div class="chat-body" id="chatBody">
         <div class="encryption-banner">
-          <i class="ri-lock-2-line"></i>
-          Messages and media in this care thread are encrypted end-to-end. Only authorized caregivers, clients, and coordinators can view them.
+          <i class="fa-solid fa-lock"></i>
+          Messages and media are encrypted end-to-end. Only authorized participants can view them.
         </div>
         <div id="messagesList">
           <!-- Messages will be injected here -->
@@ -168,18 +183,18 @@
         <!-- Standard Input Bar -->
         <div id="standardInputBar" class="flex items-center gap-2" style="width: 100%;">
           <button class="icon-btn" title="Attach Photo or Video" onclick="triggerFileInput()">
-            <i class="ri-attachment-2" style="font-size: 1.3rem;"></i>
+            <i class="fa-solid fa-paperclip" style="font-size: 1.3rem;"></i>
           </button>
           <input type="file" id="mediaFileInput" accept="image/*,video/*,audio/*" class="hidden" onchange="handleFileSelected(event)">
 
           <textarea id="messageTextInput" class="chat-input-field" placeholder="Type a message..." rows="1" onkeydown="handleInputKeyDown(event)"></textarea>
 
           <button id="micBtn" class="icon-btn" title="Record Voice Note" onclick="startAudioRecording()" style="color: var(--accent-green);">
-            <i class="ri-mic-line" style="font-size: 1.3rem;"></i>
+            <i class="fa-solid fa-microphone" style="font-size: 1.3rem;"></i>
           </button>
 
           <button id="sendBtn" class="btn-send" title="Send Message" onclick="sendMessage()">
-            <i class="ri-send-plane-2-fill"></i>
+            <i class="fa-solid fa-paper-plane"></i>
           </button>
         </div>
 
@@ -192,10 +207,10 @@
           </div>
           <div class="flex items-center gap-2">
             <button class="icon-btn" title="Cancel Recording" onclick="cancelAudioRecording()" style="color: #ef4444;">
-              <i class="ri-delete-bin-line"></i>
+              <i class="fa-regular fa-trash-can"></i>
             </button>
             <button class="btn-send" title="Send Voice Note" onclick="stopAndSendAudioRecording()">
-              <i class="ri-send-plane-2-fill"></i>
+              <i class="fa-solid fa-paper-plane"></i>
             </button>
           </div>
         </div>
@@ -205,20 +220,18 @@
 
   </div>
 
-
   <!-- ================= LIGHTBOX MEDIA MODAL ================= -->
   <div id="mediaModal" class="modal-overlay hidden" onclick="closeMediaModal(event)">
     <div class="modal-content" onclick="event.stopPropagation()">
-      <button class="close-modal-btn" onclick="closeMediaModal()">&times;</button>
+      <button class="close-modal-btn" onclick="closeMediaModal()">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
       <div id="modalMediaContainer"></div>
     </div>
   </div>
 
-
-  <!-- Supabase JS Client & Config -->
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="js/config.js"></script>
-  <!-- App Scripts -->
+  <!-- Scripts -->
+  <script src="js/supabase-client.js"></script>
   <script src="js/auth.js"></script>
   <script src="js/audioRecorder.js"></script>
   <script src="js/mediaViewer.js"></script>
