@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Akirapa Care Messaging - WhatsApp Web App</title>
+  <link rel="stylesheet" href="styles.css">
+  <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+</head>
+<body>
+
+  <!-- ================= AUTHENTICATION VIEW ================= -->
+  <div id="authContainer" class="auth-container">
+    <div class="auth-card">
+      <div class="auth-brand">
+        <div class="auth-brand-logo">
+          <i class="ri-whatsapp-line"></i>
+        </div>
+        <h1 class="auth-title">Akirapa Connect</h1>
+        <p class="auth-subtitle">Standalone Care Pod Messaging & Audio Hub</p>
+      </div>
+
+      <div class="auth-tabs">
+        <button id="tabLoginBtn" class="auth-tab active" onclick="switchAuthTab('login')">Sign In</button>
+        <button id="tabRegisterBtn" class="auth-tab" onclick="switchAuthTab('register')">Create Account</button>
+      </div>
+
+      <!-- Login Form -->
+      <form id="loginForm" onsubmit="handleLogin(event)">
+        <div class="form-group">
+          <label class="form-label" for="loginEmail">Email Address</label>
+          <input type="email" id="loginEmail" class="form-input" placeholder="e.g. caregiver@akirapa.com" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="loginPassword">Password</label>
+          <input type="password" id="loginPassword" class="form-input" placeholder="••••••••" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Sign in as Role (Optional Quick Selection)</label>
+          <select id="loginRole" class="form-select">
+            <option value="CAREGIVER">Caregiver</option>
+            <option value="FAMILY_MEMBER">Client / Family Member</option>
+            <option value="ADMIN">Admin / Coordinator</option>
+          </select>
+        </div>
+        <button type="submit" class="btn-primary" id="loginBtnSubmit">Sign In to Chat</button>
+      </form>
+
+      <!-- Register Form -->
+      <form id="registerForm" class="hidden" onsubmit="handleRegister(event)">
+        <div class="form-group">
+          <label class="form-label">Choose Account Role</label>
+          <div class="role-selector">
+            <div class="role-option selected" id="roleOptCaregiver" onclick="selectRegisterRole('CAREGIVER')">
+              <i class="ri-user-heart-line" style="font-size: 1.2rem; color: var(--role-caregiver);"></i>
+              <div class="role-option-title">Caregiver</div>
+            </div>
+            <div class="role-option" id="roleOptFamily" onclick="selectRegisterRole('FAMILY_MEMBER')">
+              <i class="ri-user-smile-line" style="font-size: 1.2rem; color: var(--role-family);"></i>
+              <div class="role-option-title">Client / Family</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="regName">Full Name</label>
+          <input type="text" id="regName" class="form-input" placeholder="e.g. Sarah Jenkins" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="regEmail">Email Address</label>
+          <input type="email" id="regEmail" class="form-input" placeholder="e.g. sarah@example.com" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="regPhone">Phone Number</label>
+          <input type="tel" id="regPhone" class="form-input" placeholder="+1 (604) 555-0199">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="regPassword">Password</label>
+          <input type="password" id="regPassword" class="form-input" placeholder="At least 6 characters" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="regCode">Verification Code (Dev OTP: enter 123456)</label>
+          <input type="text" id="regCode" class="form-input" placeholder="Enter OTP code" value="123456" required>
+        </div>
+
+        <button type="submit" class="btn-primary" id="regBtnSubmit">Create Account</button>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- ================= MAIN CHAT APP VIEW ================= -->
+  <div id="appContainer" class="app-container hidden">
+
+    <!-- LEFT SIDEBAR -->
+    <aside id="sidebar" class="sidebar">
+      <header class="sidebar-header">
+        <div class="user-profile-summary">
+          <div class="avatar" id="currentUserAvatar">A</div>
+          <div>
+            <div id="currentUserName" style="font-weight: 600; font-size: 0.95rem;">User Name</div>
+            <div id="currentUserBadge" class="role-badge CAREGIVER">CAREGIVER</div>
+          </div>
+        </div>
+        <div class="header-actions">
+          <button class="icon-btn" title="Toggle Light/Dark Theme" onclick="toggleTheme()">
+            <i class="ri-moon-line" id="themeIcon"></i>
+          </button>
+          <button class="icon-btn" title="Sign Out" onclick="handleLogout()">
+            <i class="ri-logout-box-r-line"></i>
+          </button>
+        </div>
+      </header>
+
+      <div class="sidebar-search">
+        <div class="search-input-wrap">
+          <i class="ri-search-line" style="color: var(--text-secondary);"></i>
+          <input type="text" id="searchInput" placeholder="Search conversations..." oninput="filterConversations()">
+        </div>
+      </div>
+
+      <div class="threads-list" id="threadsList">
+        <!-- Thread items rendered dynamically -->
+      </div>
+    </aside>
+
+    <!-- RIGHT CHAT WINDOW -->
+    <main id="chatWindow" class="chat-window">
+      
+      <!-- Chat Header -->
+      <header class="chat-header" id="chatHeader">
+        <div class="chat-header-info">
+          <button class="icon-btn mobile-only" onclick="toggleMobileSidebar()" title="Back to Threads">
+            <i class="ri-arrow-left-line"></i>
+          </button>
+          <div class="avatar" id="activeChatAvatar">
+            <i class="ri-team-line"></i>
+          </div>
+          <div>
+            <div class="chat-title" id="activeChatTitle">Select a Conversation</div>
+            <div class="chat-subtitle" id="activeChatSubtitle">Care Pod Communication Thread</div>
+          </div>
+        </div>
+
+        <div class="header-actions">
+          <span class="role-badge CAREGIVER" id="activeChatSecurityBadge">AES-256 ENCRYPTED</span>
+        </div>
+      </header>
+
+      <!-- Chat Body / Messages Feed -->
+      <div class="chat-body" id="chatBody">
+        <div class="encryption-banner">
+          <i class="ri-lock-2-line"></i>
+          Messages and media in this care thread are encrypted end-to-end. Only authorized caregivers, clients, and coordinators can view them.
+        </div>
+        <div id="messagesList">
+          <!-- Messages will be injected here -->
+        </div>
+      </div>
+
+      <!-- Chat Footer / Input Controls -->
+      <footer class="chat-footer" id="chatFooter">
+        
+        <!-- Standard Input Bar -->
+        <div id="standardInputBar" class="flex items-center gap-2" style="width: 100%;">
+          <button class="icon-btn" title="Attach Photo or Video" onclick="triggerFileInput()">
+            <i class="ri-attachment-2" style="font-size: 1.3rem;"></i>
+          </button>
+          <input type="file" id="mediaFileInput" accept="image/*,video/*,audio/*" class="hidden" onchange="handleFileSelected(event)">
+
+          <textarea id="messageTextInput" class="chat-input-field" placeholder="Type a message..." rows="1" onkeydown="handleInputKeyDown(event)"></textarea>
+
+          <button id="micBtn" class="icon-btn" title="Record Voice Note" onclick="startAudioRecording()" style="color: var(--accent-green);">
+            <i class="ri-mic-line" style="font-size: 1.3rem;"></i>
+          </button>
+
+          <button id="sendBtn" class="btn-send" title="Send Message" onclick="sendMessage()">
+            <i class="ri-send-plane-2-fill"></i>
+          </button>
+        </div>
+
+        <!-- Audio Voice Recording Active Bar -->
+        <div id="recordingBar" class="recording-bar hidden">
+          <div class="flex items-center gap-3">
+            <div class="recording-pulse"></div>
+            <span style="font-weight: 600; font-size: 0.9rem;" id="recordingTimer">00:00</span>
+            <span style="font-size: 0.85rem; opacity: 0.8;">Recording voice note...</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <button class="icon-btn" title="Cancel Recording" onclick="cancelAudioRecording()" style="color: #ef4444;">
+              <i class="ri-delete-bin-line"></i>
+            </button>
+            <button class="btn-send" title="Send Voice Note" onclick="stopAndSendAudioRecording()">
+              <i class="ri-send-plane-2-fill"></i>
+            </button>
+          </div>
+        </div>
+
+      </footer>
+    </main>
+
+  </div>
+
+
+  <!-- ================= LIGHTBOX MEDIA MODAL ================= -->
+  <div id="mediaModal" class="modal-overlay hidden" onclick="closeMediaModal(event)">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <button class="close-modal-btn" onclick="closeMediaModal()">&times;</button>
+      <div id="modalMediaContainer"></div>
+    </div>
+  </div>
+
+
+  <!-- Scripts -->
+  <script src="js/auth.js"></script>
+  <script src="js/audioRecorder.js"></script>
+  <script src="js/mediaViewer.js"></script>
+  <script src="js/chatApp.js"></script>
+</body>
+</html>

@@ -1,0 +1,19 @@
+{
+  "name": "akirapa-messaging-app",
+  "version": "1.0.0",
+  "description": "Standalone WhatsApp-Style Care Pod Messaging Web Application",
+  "main": "index.html",
+  "scripts": {
+    "start": "npx -y serve . -p 3001",
+    "dev": "npx -y serve . -p 3001"
+  },
+  "keywords": [
+    "chat",
+    "whatsapp",
+    "caregiver",
+    "messaging",
+    "audio-notes"
+  ],
+  "author": "Akirapa Team",
+  "license": "MIT"
+}
