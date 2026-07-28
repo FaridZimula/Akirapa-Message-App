@@ -1,6 +1,8 @@
 -- ====================================================================
--- AKIRAPA MESSAGING APP - COMPLETE SUPABASE DATABASE SCHEMA
--- Run this script in your Supabase SQL Editor (https://app.supabase.com)
+-- AKIRAPA MESSAGING APP - DATABASE SCHEMA REFERENCE
+-- NOTE: The active application engine runs on an optimized Express REST + 
+-- Socket.IO backend with local JSON persistence (data/app-data.json).
+-- This SQL file serves as a reference schema for external PostgreSQL deployments.
 -- ====================================================================
 
 -- 1. Enable UUID extension

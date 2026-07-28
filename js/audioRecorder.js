@@ -5,11 +5,35 @@ let audioChunks = [];
 let recordingStartTime = 0;
 let recordingTimerInterval = null;
 
+function cleanupExistingRecording() {
+  if (recordingTimerInterval) {
+    clearInterval(recordingTimerInterval);
+    recordingTimerInterval = null;
+  }
+  if (mediaRecorder) {
+    try {
+      if (mediaRecorder.state !== 'inactive') {
+        mediaRecorder.onstop = null;
+        mediaRecorder.stop();
+      }
+      if (mediaRecorder.stream) {
+        mediaRecorder.stream.getTracks().forEach(track => track.stop());
+      }
+    } catch (e) {
+      console.warn('Error cleaning up media recorder:', e);
+    }
+    mediaRecorder = null;
+  }
+  audioChunks = [];
+}
+
 async function startAudioRecording() {
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
     alert('Voice recording is not supported in your browser or connection requires HTTPS.');
     return;
   }
+
+  cleanupExistingRecording();
 
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
@@ -48,32 +72,30 @@ function updateRecordingTimer() {
 function stopAudioRecording() {
   return new Promise((resolve) => {
     if (!mediaRecorder || mediaRecorder.state === 'inactive') {
+      cleanupExistingRecording();
       resolve(null);
       return;
     }
 
     mediaRecorder.onstop = () => {
       const audioBlob = new Blob(audioChunks, { type: 'audio/webm;codecs=opus' });
-      mediaRecorder.stream.getTracks().forEach(track => track.stop());
+      if (mediaRecorder.stream) {
+        mediaRecorder.stream.getTracks().forEach(track => track.stop());
+      }
       mediaRecorder = null;
       resolve(audioBlob);
     };
 
     mediaRecorder.stop();
-    clearInterval(recordingTimerInterval);
+    if (recordingTimerInterval) {
+      clearInterval(recordingTimerInterval);
+      recordingTimerInterval = null;
+    }
   });
 }
 
 async function cancelAudioRecording() {
-  if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-    mediaRecorder.onstop = () => {
-      mediaRecorder.stream.getTracks().forEach(track => track.stop());
-      mediaRecorder = null;
-    };
-    mediaRecorder.stop();
-  }
-  clearInterval(recordingTimerInterval);
-  audioChunks = [];
+  cleanupExistingRecording();
 
   document.getElementById('standardInputBar').classList.remove('hidden');
   document.getElementById('recordingBar').classList.add('hidden');

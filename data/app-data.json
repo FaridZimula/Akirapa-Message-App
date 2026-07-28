@@ -1,0 +1,597 @@
+{
+  "users": [
+    {
+      "id": "user_1",
+      "name": "Ava Thompson",
+      "email": "ava@akirapa.com",
+      "password": "123456",
+      "phoneNumber": "+1 604 555 0101",
+      "role": "CAREGIVER",
+      "createdAt": "2026-01-01T10:00:00.000Z",
+      "username": "ava_caregiver"
+    },
+    {
+      "id": "user_2",
+      "name": "Mina Patel",
+      "email": "mina@akirapa.com",
+      "password": "123456",
+      "phoneNumber": "+1 604 555 0102",
+      "role": "FAMILY_MEMBER",
+      "createdAt": "2026-01-02T09:30:00.000Z",
+      "username": "mina_family"
+    },
+    {
+      "id": "user_3",
+      "name": "Jordan Lee",
+      "email": "jordan@akirapa.com",
+      "password": "123456",
+      "phoneNumber": "+1 604 555 0103",
+      "role": "ADMIN",
+      "createdAt": "2026-01-03T08:15:00.000Z",
+      "username": "jordan_admin"
+    },
+    {
+      "id": "user_1785267173645",
+      "name": "Andrew Muyanja",
+      "email": "aandrewmuyanja@gmail.com",
+      "password": "muyanja5",
+      "phoneNumber": "0708765729",
+      "role": "CAREGIVER",
+      "createdAt": "2026-07-28T19:32:53.645Z",
+      "username": "andrew_muyanja"
+    },
+    {
+      "id": "user_4",
+      "name": "Andrew Ssemwogerere",
+      "username": "andrew",
+      "email": "andrew@akirapa.com",
+      "password": "123456",
+      "phoneNumber": "+1 604 555 0104",
+      "role": "CAREGIVER",
+      "createdAt": "2026-01-01T11:00:00.000Z"
+    },
+    {
+      "id": "user_5",
+      "name": "Farid Zimula",
+      "username": "farid",
+      "email": "farid@akirapa.com",
+      "password": "123456",
+      "phoneNumber": "+1 604 555 0105",
+      "role": "FAMILY_MEMBER",
+      "createdAt": "2026-01-02T10:30:00.000Z"
+    },
+    {
+      "id": "user_6",
+      "name": "Stuart Muyanja",
+      "username": "stuart",
+      "email": "stuart@akirapa.com",
+      "password": "123456",
+      "phoneNumber": "+1 604 555 0106",
+      "role": "ADMIN",
+      "createdAt": "2026-01-03T09:15:00.000Z"
+    }
+  ],
+  "messages": [
+    {
+      "id": 1,
+      "conversationId": "conv_user_1_user_2",
+      "senderId": "user_2",
+      "senderName": "Mina Patel",
+      "senderRole": "FAMILY_MEMBER",
+      "recipientId": "user_1",
+      "text": "Hi Ava, I just wanted to confirm the care plan for today.",
+      "createdAt": "2026-01-05T09:00:00.000Z",
+      "mediaUrl": null,
+      "mediaType": null,
+      "mediaName": null,
+      "isRead": true
+    },
+    {
+      "id": 2,
+      "conversationId": "conv_user_1_user_2",
+      "senderId": "user_1",
+      "senderName": "Ava Thompson",
+      "senderRole": "CAREGIVER",
+      "recipientId": "user_2",
+      "text": "Absolutely — I will be there at 10:30 and will update the medication log.",
+      "createdAt": "2026-01-05T09:05:00.000Z",
+      "mediaUrl": null,
+      "mediaType": null,
+      "mediaName": null,
+      "isRead": true
+    },
+    {
+      "id": 3,
+      "conversationId": "conv_user_1_user_2",
+      "senderId": "user_1",
+      "senderName": "Ava Thompson",
+      "senderRole": "CAREGIVER",
+      "recipientId": "user",
+      "text": "Test integration message",
+      "createdAt": "2026-07-28T19:07:43.034Z",
+      "mediaUrl": null,
+      "mediaType": null,
+      "mediaName": null,
+      "isRead": true
+    },
+    {
+      "id": 4,
+      "conversationId": "conv_user_1_user_2",
+      "senderId": "user_1",
+      "senderName": "Ava Thompson",
+      "senderRole": "CAREGIVER",
+      "recipientId": "user",
+      "text": "Test integration message",
+      "createdAt": "2026-07-28T19:14:19.878Z",
+      "mediaUrl": null,
+      "mediaType": null,
+      "mediaName": null,
+      "isRead": true
+    },
+    {
+      "id": 5,
+      "conversationId": "conv_user_1_user_2",
+      "senderId": "user_1",
+      "senderName": "Ava Thompson",
+      "senderRole": "CAREGIVER",
+      "recipientId": "user",
+      "text": "Test integration message",
+      "createdAt": "2026-07-28T19:19:10.875Z",
+      "mediaUrl": null,
+      "mediaType": null,
+      "mediaName": null,
+      "isRead": true
+    },
+    {
+      "id": 6,
+      "conversationId": "conv_user_1_user_2",
+      "senderId": "user_1",
+      "senderName": "Ava Thompson",
+      "senderRole": "CAREGIVER",
+      "recipientId": "user",
+      "text": "Test integration message",
+      "createdAt": "2026-07-28T19:21:45.404Z",
+      "mediaUrl": null,
+      "mediaType": null,
+      "mediaName": null,
+      "isRead": true
+    },
+    {
+      "id": 7,
+      "conversationId": "conv_user_1_user_2",
+      "senderId": "user_2",
+      "senderName": "Mina Patel",
+      "senderRole": "FAMILY_MEMBER",
+      "recipientId": "user",
+      "text": "hello",
+      "createdAt": "2026-07-28T21:55:01.070Z",
+      "mediaUrl": null,
+      "mediaType": null,
+      "mediaName": null,
+      "isRead": false
+    },
+    {
+      "id": 8,
+      "conversationId": "conv_user_1_user_3",
+      "senderId": "user_1",
+      "senderName": "Ava Thompson",
+      "senderRole": "CAREGIVER",
+      "recipientId": "user",
+      "text": "hei there",
+      "createdAt": "2026-07-28T21:57:08.900Z",
+      "mediaUrl": null,
+      "mediaType": null,
+      "mediaName": null,
+      "isRead": false
+    },
+    {
+      "id": 9,
+      "conversationId": "conv_user_1785267173645_user_5",
+      "senderId": "user_1785267173645",
+      "senderName": "Andrew Muyanja",
+      "senderRole": "CAREGIVER",
+      "recipientId": "user",
+      "text": "hello there",
+      "createdAt": "2026-07-28T23:53:21.228Z",
+      "mediaUrl": null,
+      "mediaType": null,
+      "mediaName": null,
+      "isRead": true
+    },
+    {
+      "id": 10,
+      "conversationId": "conv_user_1785267173645_user_5",
+      "senderId": "user_5",
+      "senderName": "Farid Zimula",
+      "senderRole": "FAMILY_MEMBER",
+      "recipientId": "user",
+      "text": "hello how are you doing",
+      "createdAt": "2026-07-28T23:54:23.519Z",
+      "mediaUrl": null,
+      "mediaType": null,
+      "mediaName": null,
+      "isRead": true
+    }
+  ],
+  "messageId": 11,
+  "auditLogs": [
+    {
+      "id": 1785282893211,
+      "actorId": "user_6",
+      "action": "login",
+      "detail": "Signed in stuart",
+      "createdAt": "2026-07-28T23:54:53.211Z"
+    },
+    {
+      "id": 1785282870934,
+      "actorId": "user_5",
+      "action": "logout",
+      "detail": "Signed out",
+      "createdAt": "2026-07-28T23:54:30.934Z"
+    },
+    {
+      "id": 1785282863521,
+      "actorId": "user_5",
+      "action": "message_sent",
+      "detail": "Sent message in conv_user_1785267173645_user_5",
+      "createdAt": "2026-07-28T23:54:23.521Z"
+    },
+    {
+      "id": 1785282847067,
+      "actorId": "user_5",
+      "action": "login",
+      "detail": "Signed in farid",
+      "createdAt": "2026-07-28T23:54:07.067Z"
+    },
+    {
+      "id": 1785282808519,
+      "actorId": "user_1785267173645",
+      "action": "logout",
+      "detail": "Signed out",
+      "createdAt": "2026-07-28T23:53:28.519Z"
+    },
+    {
+      "id": 1785282801229,
+      "actorId": "user_1785267173645",
+      "action": "message_sent",
+      "detail": "Sent message in conv_user_1785267173645_user_5",
+      "createdAt": "2026-07-28T23:53:21.229Z"
+    },
+    {
+      "id": 1785282742679,
+      "actorId": "user_1785267173645",
+      "action": "login",
+      "detail": "Signed in andrew_muyanja",
+      "createdAt": "2026-07-28T23:52:22.679Z"
+    },
+    {
+      "id": 1785275851365,
+      "actorId": "user_3",
+      "action": "login",
+      "detail": "Signed in jordan@akirapa.com",
+      "createdAt": "2026-07-28T21:57:31.365Z"
+    },
+    {
+      "id": 1785275849124,
+      "actorId": "user_2",
+      "action": "logout",
+      "detail": "Signed out",
+      "createdAt": "2026-07-28T21:57:29.124Z"
+    },
+    {
+      "id": 1785275845722,
+      "actorId": "user_2",
+      "action": "login",
+      "detail": "Signed in mina@akirapa.com",
+      "createdAt": "2026-07-28T21:57:25.722Z"
+    },
+    {
+      "id": 1785275843927,
+      "actorId": "user_1",
+      "action": "logout",
+      "detail": "Signed out",
+      "createdAt": "2026-07-28T21:57:23.927Z"
+    },
+    {
+      "id": 1785275839075,
+      "actorId": "user_1",
+      "action": "login",
+      "detail": "Signed in ava@akirapa.com",
+      "createdAt": "2026-07-28T21:57:19.075Z"
+    },
+    {
+      "id": 1785275834072,
+      "actorId": "user_1",
+      "action": "logout",
+      "detail": "Signed out",
+      "createdAt": "2026-07-28T21:57:14.072Z"
+    },
+    {
+      "id": 1785275828901,
+      "actorId": "user_1",
+      "action": "message_sent",
+      "detail": "Sent message in conv_user_1_user_3",
+      "createdAt": "2026-07-28T21:57:08.901Z"
+    },
+    {
+      "id": 1785275814188,
+      "actorId": "user_1",
+      "action": "login",
+      "detail": "Signed in ava@akirapa.com",
+      "createdAt": "2026-07-28T21:56:54.188Z"
+    },
+    {
+      "id": 1785275799961,
+      "actorId": "user_1",
+      "action": "logout",
+      "detail": "Signed out",
+      "createdAt": "2026-07-28T21:56:39.961Z"
+    },
+    {
+      "id": 1785275723277,
+      "actorId": "user_1",
+      "action": "login",
+      "detail": "Signed in ava@akirapa.com",
+      "createdAt": "2026-07-28T21:55:23.277Z"
+    },
+    {
+      "id": 1785275721126,
+      "actorId": "user_3",
+      "action": "logout",
+      "detail": "Signed out",
+      "createdAt": "2026-07-28T21:55:21.126Z"
+    },
+    {
+      "id": 1785275713931,
+      "actorId": "user_3",
+      "action": "login",
+      "detail": "Signed in jordan@akirapa.com",
+      "createdAt": "2026-07-28T21:55:13.931Z"
+    },
+    {
+      "id": 1785275711670,
+      "actorId": "user_1",
+      "action": "logout",
+      "detail": "Signed out",
+      "createdAt": "2026-07-28T21:55:11.670Z"
+    },
+    {
+      "id": 1785275707380,
+      "actorId": "user_1",
+      "action": "login",
+      "detail": "Signed in ava@akirapa.com",
+      "createdAt": "2026-07-28T21:55:07.380Z"
+    },
+    {
+      "id": 1785275705332,
+      "actorId": "user_2",
+      "action": "logout",
+      "detail": "Signed out",
+      "createdAt": "2026-07-28T21:55:05.332Z"
+    },
+    {
+      "id": 1785275701070,
+      "actorId": "user_2",
+      "action": "message_sent",
+      "detail": "Sent message in conv_user_1_user_2",
+      "createdAt": "2026-07-28T21:55:01.070Z"
+    },
+    {
+      "id": 1785275692969,
+      "actorId": "user_2",
+      "action": "login",
+      "detail": "Signed in mina@akirapa.com",
+      "createdAt": "2026-07-28T21:54:52.969Z"
+    },
+    {
+      "id": 1785275689953,
+      "actorId": "user_3",
+      "action": "logout",
+      "detail": "Signed out",
+      "createdAt": "2026-07-28T21:54:49.953Z"
+    },
+    {
+      "id": 1785275607737,
+      "actorId": "user_3",
+      "action": "login",
+      "detail": "Signed in jordan@akirapa.com",
+      "createdAt": "2026-07-28T21:53:27.737Z"
+    },
+    {
+      "id": 1785275605528,
+      "actorId": "user_2",
+      "action": "logout",
+      "detail": "Signed out",
+      "createdAt": "2026-07-28T21:53:25.528Z"
+    },
+    {
+      "id": 1785275548485,
+      "actorId": "user_2",
+      "action": "login",
+      "detail": "Signed in mina@akirapa.com",
+      "createdAt": "2026-07-28T21:52:28.485Z"
+    },
+    {
+      "id": 1785275545038,
+      "actorId": "user_1",
+      "action": "logout",
+      "detail": "Signed out",
+      "createdAt": "2026-07-28T21:52:25.038Z"
+    },
+    {
+      "id": 1785275519595,
+      "actorId": "user_1",
+      "action": "login",
+      "detail": "Signed in ava@akirapa.com",
+      "createdAt": "2026-07-28T21:51:59.595Z"
+    },
+    {
+      "id": 1785267400916,
+      "actorId": "user_1785267173645",
+      "action": "logout",
+      "detail": "Signed out",
+      "createdAt": "2026-07-28T19:36:40.916Z"
+    },
+    {
+      "id": 1785267173658,
+      "actorId": "user_1785267173645",
+      "action": "login",
+      "detail": "Signed in aandrewmuyanja@gmail.com",
+      "createdAt": "2026-07-28T19:32:53.658Z"
+    },
+    {
+      "id": 1785267173646,
+      "actorId": "user_1785267173645",
+      "action": "register",
+      "detail": "Registered aandrewmuyanja@gmail.com",
+      "createdAt": "2026-07-28T19:32:53.646Z"
+    },
+    {
+      "id": 1785266505407,
+      "actorId": "user_1",
+      "action": "message_sent",
+      "detail": "Sent message in conv_user_1_user_2",
+      "createdAt": "2026-07-28T19:21:45.407Z"
+    },
+    {
+      "id": 1785266505311,
+      "actorId": "user_3",
+      "action": "login",
+      "detail": "Signed in jordan@akirapa.com",
+      "createdAt": "2026-07-28T19:21:45.311Z"
+    },
+    {
+      "id": 1785266505295,
+      "actorId": "user_1",
+      "action": "login",
+      "detail": "Signed in ava@akirapa.com",
+      "createdAt": "2026-07-28T19:21:45.295Z"
+    },
+    {
+      "id": 1785266350876,
+      "actorId": "user_1",
+      "action": "message_sent",
+      "detail": "Sent message in conv_user_1_user_2",
+      "createdAt": "2026-07-28T19:19:10.876Z"
+    },
+    {
+      "id": 1785266350815,
+      "actorId": "user_3",
+      "action": "login",
+      "detail": "Signed in jordan@akirapa.com",
+      "createdAt": "2026-07-28T19:19:10.815Z"
+    },
+    {
+      "id": 1785266350806,
+      "actorId": "user_1",
+      "action": "login",
+      "detail": "Signed in ava@akirapa.com",
+      "createdAt": "2026-07-28T19:19:10.806Z"
+    },
+    {
+      "id": 1785266059912,
+      "actorId": "user_2",
+      "action": "login",
+      "detail": "Signed in mina@akirapa.com",
+      "createdAt": "2026-07-28T19:14:19.912Z"
+    },
+    {
+      "id": 1785266059880,
+      "actorId": "user_1",
+      "action": "message_sent",
+      "detail": "Sent message in conv_user_1_user_2",
+      "createdAt": "2026-07-28T19:14:19.880Z"
+    },
+    {
+      "id": 1785266059819,
+      "actorId": "user_3",
+      "action": "login",
+      "detail": "Signed in jordan@akirapa.com",
+      "createdAt": "2026-07-28T19:14:19.819Z"
+    },
+    {
+      "id": 1785266059802,
+      "actorId": "user_1",
+      "action": "login",
+      "detail": "Signed in ava@akirapa.com",
+      "createdAt": "2026-07-28T19:14:19.802Z"
+    },
+    {
+      "id": 1785265663036,
+      "actorId": "user_1",
+      "action": "message_sent",
+      "detail": "Sent message in conv_user_1_user_2",
+      "createdAt": "2026-07-28T19:07:43.036Z"
+    },
+    {
+      "id": 1785265662951,
+      "actorId": "user_3",
+      "action": "login",
+      "detail": "Signed in jordan@akirapa.com",
+      "createdAt": "2026-07-28T19:07:42.951Z"
+    },
+    {
+      "id": 1785265662926,
+      "actorId": "user_1",
+      "action": "login",
+      "detail": "Signed in ava@akirapa.com",
+      "createdAt": "2026-07-28T19:07:42.926Z"
+    },
+    {
+      "id": 1785192684011,
+      "actorId": "user_1",
+      "action": "login",
+      "detail": "Signed in ava@akirapa.com",
+      "createdAt": "2026-07-27T22:51:24.011Z"
+    }
+  ],
+  "conversations": [
+    {
+      "id": "conv_user_1_user_2",
+      "participants": [
+        "user_1",
+        "user_2"
+      ],
+      "createdAt": "2026-01-05T09:00:00.000Z"
+    },
+    {
+      "id": "conv_user_2_user_3",
+      "participants": [
+        "user_3",
+        "user_2"
+      ],
+      "createdAt": "2026-07-28T19:14:19.928Z"
+    },
+    {
+      "id": "conv_user_1_user_3",
+      "participants": [
+        "user_3",
+        "user_1"
+      ],
+      "createdAt": "2026-07-28T19:14:19.939Z"
+    },
+    {
+      "id": "conv_user_1785267173645_user_5",
+      "participants": [
+        "user_1785267173645",
+        "user_5"
+      ],
+      "createdAt": "2026-07-28T23:53:12.125Z"
+    }
+  ],
+  "sessions": {
+    "sess_1785282893209_eb3f4c4a74252": {
+      "userId": "user_6",
+      "user": {
+        "id": "user_6",
+        "name": "Stuart Muyanja",
+        "username": "stuart",
+        "email": "stuart@akirapa.com",
+        "password": "123456",
+        "phoneNumber": "+1 604 555 0106",
+        "role": "ADMIN",
+        "createdAt": "2026-01-03T09:15:00.000Z"
+      }
+    }
+  }
+}

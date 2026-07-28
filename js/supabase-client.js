@@ -1,211 +1,148 @@
-const supabaseUrl = 'https://your-project.supabase.co';
-const supabaseAnonKey = 'your-anon-key';
+// ============================================================
+// AKIRAPA AUTH CLIENT - Synchronous Window Attach (Fail-Safe)
+// ============================================================
 
-// Configure Supabase with persistent session
-const supabase = window.supabase.createClient(supabaseUrl, supabaseAnonKey, {
-    auth: {
-        persistSession: true,
-        autoRefreshToken: true,
-        detectSessionInUrl: true,
-        storage: {
-            getItem: (key) => {
-                return new Promise((resolve) => {
-                    try {
-                        const value = localStorage.getItem(key);
-                        resolve(value);
-                    } catch (err) {
-                        resolve(null);
-                    }
-                });
-            },
-            setItem: (key, value) => {
-                return new Promise((resolve) => {
-                    try {
-                        localStorage.setItem(key, value);
-                        resolve();
-                    } catch (err) {
-                        resolve();
-                    }
-                });
-            },
-            removeItem: (key) => {
-                return new Promise((resolve) => {
-                    try {
-                        localStorage.removeItem(key);
-                        resolve();
-                    } catch (err) {
-                        resolve();
-                    }
-                });
-            }
-        }
+(function() {
+    let currentUser = null;
+    let currentSession = null;
+    let refreshInterval = null;
+
+    function normalizeUser(user) {
+        if (!user) return null;
+        const metadata = user.user_metadata || {
+            name: user.name || user.email,
+            role: user.role || 'FAMILY_MEMBER',
+            phone_number: user.phoneNumber || null
+        };
+
+        return {
+            ...user,
+            user_metadata: metadata,
+            role: user.role || metadata.role || 'FAMILY_MEMBER',
+            email: user.email
+        };
     }
-});
 
-window.supabaseClient = supabase;
-
-// Session management
-let currentUser = null;
-let currentSession = null;
-let refreshInterval = null;
-
-async function initSupabase() {
-    try {
-        const { data: { session }, error } = await supabase.auth.getSession();
-        if (error) throw error;
-        
-        if (session) {
-            currentSession = session;
-            currentUser = session.user;
-            
-            // Auto-refresh session
-            startAutoRefresh();
-            
-            const { data: profile } = await supabase
-                .from('profiles')
-                .select('*')
-                .eq('id', session.user.id)
-                .single();
-            
-            if (profile) {
-                currentUser.profile = profile;
-            }
-            
-            // Update online status
-            await updateOnlineStatus(true);
-            
-            return session;
-        }
-        return null;
-    } catch (err) {
-        console.error('Supabase init error:', err);
-        return null;
-    }
-}
-
-function startAutoRefresh() {
-    if (refreshInterval) clearInterval(refreshInterval);
-    refreshInterval = setInterval(async () => {
+    async function initSupabase() {
         try {
-            const { data: { session }, error } = await supabase.auth.refreshSession();
-            if (error) throw error;
-            if (session) {
-                currentSession = session;
-                currentUser = session.user;
+            const token = localStorage.getItem('akirapa_session_token');
+            if (token) {
+                const response = await fetch('/api/auth/me', {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                const data = await response.json();
+                if (response.ok && data.user) {
+                    currentSession = { access_token: token };
+                    currentUser = normalizeUser(data.user);
+                    return currentSession;
+                }
+                localStorage.removeItem('akirapa_session_token');
+            }
+            return null;
+        } catch (err) {
+            console.error('Auth init error:', err);
+            return null;
+        }
+    }
+
+    async function signUpWithSupabase(email, password, userData) {
+        try {
+            const response = await fetch('/api/auth/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    email,
+                    password,
+                    name: userData.name,
+                    username: userData.username,
+                    phoneNumber: userData.phoneNumber,
+                    role: userData.role,
+                    code: userData.code || '123456'
+                })
+            });
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.error || 'Registration failed');
+
+            currentSession = data.session;
+            currentUser = normalizeUser(data.user);
+            localStorage.setItem('akirapa_session_token', data.session.access_token);
+            return { user: currentUser, session: currentSession };
+        } catch (err) {
+            throw err;
+        }
+    }
+
+    async function signInWithSupabase(email, password) {
+        try {
+            const response = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.error || 'Login failed');
+
+            currentSession = data.session;
+            currentUser = normalizeUser(data.user);
+            localStorage.setItem('akirapa_session_token', data.session.access_token);
+            return { user: currentUser, session: currentSession };
+        } catch (err) {
+            throw err;
+        }
+    }
+
+    async function signOutWithSupabase() {
+        try {
+            if (currentSession?.access_token) {
+                await fetch('/api/auth/logout', {
+                    method: 'POST',
+                    headers: { Authorization: `Bearer ${currentSession.access_token}` }
+                });
             }
         } catch (err) {
-            console.error('Session refresh error:', err);
+            console.error('Logout error:', err);
+        } finally {
+            localStorage.removeItem('akirapa_session_token');
+            currentUser = null;
+            currentSession = null;
         }
-    }, 10 * 60 * 1000); // Refresh every 10 minutes
-}
-
-async function updateOnlineStatus(isOnline) {
-    if (!currentUser) return;
-    try {
-        await supabase
-            .from('profiles')
-            .update({ 
-                online_status: isOnline,
-                last_seen: new Date().toISOString()
-            })
-            .eq('id', currentUser.id);
-    } catch (err) {
-        console.error('Update online status error:', err);
     }
-}
 
-async function signUpWithSupabase(email, password, userData) {
-    try {
-        const { data, error } = await supabase.auth.signUp({
-            email,
-            password,
-            options: {
-                data: {
-                    name: userData.name,
-                    phone_number: userData.phoneNumber,
-                    role: userData.role
-                }
-            }
-        });
-        if (error) throw error;
-        return data;
-    } catch (err) {
-        throw err;
+    function getCurrentUser() {
+        return currentUser;
     }
-}
 
-async function signInWithSupabase(email, password, rememberMe = true) {
-    try {
-        const { data, error } = await supabase.auth.signInWithPassword({
-            email,
-            password,
-            options: {
-            }
-        });
-        if (error) throw error;
-        
-        currentSession = data.session;
-        currentUser = data.user;
-        
-        // Get profile
-        const { data: profile } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', data.user.id)
-            .single();
-        
-        if (profile) {
-            currentUser.profile = profile;
+    function getCurrentSession() {
+        return currentSession;
+    }
+
+    async function signInWithGoogle(email, name, role) {
+        try {
+            const response = await fetch('/api/auth/google', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, name, role })
+            });
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.error || 'Google authentication failed');
+
+            currentSession = data.session;
+            currentUser = normalizeUser(data.user);
+            localStorage.setItem('akirapa_session_token', data.session.access_token);
+            return { user: currentUser, session: currentSession };
+        } catch (err) {
+            throw err;
         }
-        
-        await updateOnlineStatus(true);
-        startAutoRefresh();
-        
-        return data;
-    } catch (err) {
-        throw err;
     }
-}
 
-async function signOutWithSupabase() {
-    try {
-        await updateOnlineStatus(false);
-        if (refreshInterval) clearInterval(refreshInterval);
-        const { error } = await supabase.auth.signOut();
-        if (error) throw error;
-        currentUser = null;
-        currentSession = null;
-    } catch (err) {
-        throw err;
-    }
-}
+    // Attach all functions synchronously to window immediately
+    window.initSupabase = initSupabase;
+    window.signUpWithSupabase = signUpWithSupabase;
+    window.signInWithSupabase = signInWithSupabase;
+    window.signInWithGoogle = signInWithGoogle;
+    window.signOutWithSupabase = signOutWithSupabase;
+    window.getCurrentUser = getCurrentUser;
+    window.getCurrentSession = getCurrentSession;
 
-function getCurrentUser() {
-    return currentUser;
-}
-
-function getCurrentSession() {
-    return currentSession;
-}
-
-// Handle page unload - update online status
-window.addEventListener('beforeunload', async () => {
-    await updateOnlineStatus(false);
-});
-
-// Handle visibility change - update online status
-document.addEventListener('visibilitychange', async () => {
-    if (document.visibilityState === 'visible' && currentUser) {
-        await updateOnlineStatus(true);
-    } else if (document.visibilityState === 'hidden' && currentUser) {
-    }
-});
-
-window.supabaseClient = supabase;
-window.initSupabase = initSupabase;
-window.signUpWithSupabase = signUpWithSupabase;
-window.signInWithSupabase = signInWithSupabase;
-window.signOutWithSupabase = signOutWithSupabase;
-window.getCurrentUser = getCurrentUser;
-window.getCurrentSession = getCurrentSession;
-window.updateOnlineStatus = updateOnlineStatus;
+    console.log('✅ Auth client initialized and attached to window');
+})();

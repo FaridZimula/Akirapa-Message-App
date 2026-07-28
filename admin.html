@@ -4,9 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Akirapa Admin Panel</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
     <style>
         .admin-container {
             display: flex;
@@ -133,6 +136,19 @@
             color: var(--text-muted);
             font-size: 0.8rem;
         }
+        .online-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-left: 6px;
+        }
+        .online-indicator.online {
+            background: #00a884;
+        }
+        .online-indicator.offline {
+            background: var(--text-muted);
+        }
     </style>
 </head>
 <body>
@@ -152,14 +168,14 @@
                 <input type="email" id="adminEmail" class="form-input" required>
             </div>
             <div class="form-group">
-  <label class="form-label" for="loginPassword">Password</label>
-  <div class="password-input-wrapper">
-    <input type="password" id="loginPassword" class="form-input password-input" placeholder="••••••••" required>
-    <button type="button" class="password-toggle-btn" onclick="togglePasswordVisibility('loginPassword', this)" tabindex="-1">
-      <i class="fa-regular fa-eye"></i>
-    </button>
-  </div>
-</div>
+                <label class="form-label" for="loginPassword">Password</label>
+                <div class="password-input-wrapper">
+                    <input type="password" id="loginPassword" class="form-input password-input" placeholder="••••••••" required>
+                    <button type="button" class="password-toggle-btn" onclick="togglePasswordVisibility('loginPassword', this)" tabindex="-1">
+                        <i class="fa-regular fa-eye"></i>
+                    </button>
+                </div>
+            </div>
             <button type="submit" class="btn-primary">Sign In as Admin</button>
         </form>
     </div>
@@ -208,6 +224,10 @@
                     <div class="number" id="statConversations">0</div>
                     <div class="label">Active Conversations</div>
                 </div>
+                <div class="stat-card">
+                    <div class="number" id="statOnline">0</div>
+                    <div class="label">Online Users</div>
+                </div>
             </div>
         </div>
 
@@ -232,6 +252,7 @@
 <script>
 let currentAdmin = null;
 let currentView = 'dashboard';
+let socket = null;
 
 async function checkAdminSession() {
     const session = await window.initSupabase();
@@ -240,6 +261,7 @@ async function checkAdminSession() {
         currentAdmin = user;
         document.getElementById('adminApp').classList.remove('hidden');
         document.getElementById('authContainer').classList.add('hidden');
+        connectSocket();
         loadDashboard();
     } else {
         document.getElementById('adminApp').classList.add('hidden');
@@ -247,10 +269,56 @@ async function checkAdminSession() {
     }
 }
 
+function connectSocket() {
+    const token = window.getCurrentSession()?.access_token;
+    if (!token) return;
+
+    const socketUrl = window.location.protocol.startsWith('http') ? window.location.origin : 'http://localhost:3001';
+
+    socket = io(socketUrl, {
+        auth: { token },
+        transports: ['websocket', 'polling'],
+        reconnection: true
+    });
+
+    socket.on('connect', () => {
+        console.log('Admin Socket connected');
+    });
+
+    socket.on('disconnect', () => {
+        console.log('Admin Socket disconnected');
+    });
+
+    socket.on('user_status', (data) => {
+        // Update online status in UI
+        document.querySelectorAll('.user-item').forEach(el => {
+            const userId = el.dataset.userId;
+            if (userId === data.userId) {
+                const statusEl = el.querySelector('.online-indicator');
+                if (statusEl) {
+                    statusEl.className = `online-indicator ${data.online ? 'online' : 'offline'}`;
+                }
+            }
+        });
+        // Update online count
+        updateOnlineCount();
+    });
+}
+
+async function updateOnlineCount() {
+    try {
+        const response = await fetch('/api/health');
+        const data = await response.json();
+        document.getElementById('statOnline').textContent = data.onlineUsers || 0;
+    } catch (err) {
+        console.error('Error fetching online count:', err);
+    }
+}
+
 async function handleAdminLogin(e) {
     e.preventDefault();
     const email = document.getElementById('adminEmail').value;
-    const password = document.getElementById('adminPassword').value;
+    const password = document.getElementById('loginPassword').value;
     try {
         await window.signInWithSupabase(email, password);
         const user = window.getCurrentUser();
@@ -262,6 +330,7 @@ async function handleAdminLogin(e) {
         currentAdmin = user;
         document.getElementById('adminApp').classList.remove('hidden');
         document.getElementById('authContainer').classList.add('hidden');
+        connectSocket();
         loadDashboard();
     } catch (err) {
         alert('Login failed: ' + err.message);
@@ -270,20 +339,24 @@ async function handleAdminLogin(e) {
 
 async function loadDashboard() {
     try {
-        const [usersRes, convRes] = await Promise.all([
+        const token = window.getCurrentSession()?.access_token;
+        const [usersRes, convRes, healthRes] = await Promise.all([
             fetch('/api/admin/users', {
-                headers: { 'Authorization': `Bearer ${window.currentSession?.access_token}` }
+                headers: { 'Authorization': `Bearer ${token}` }
             }),
             fetch('/api/messages/conversations', {
-                headers: { 'Authorization': `Bearer ${window.currentSession?.access_token}` }
-            })
+                headers: { 'Authorization': `Bearer ${token}` }
+            }),
+            fetch('/api/health')
         ]);
 
         const users = await usersRes.json();
         const conversations = await convRes.json();
+        const health = await healthRes.json();
 
         document.getElementById('statUsers').textContent = users.users?.length || 0;
         document.getElementById('statConversations').textContent = conversations.conversations?.length || 0;
+        document.getElementById('statOnline').textContent = health.onlineUsers || 0;
     } catch (err) {
         console.error('Dashboard error:', err);
     }
@@ -291,8 +364,9 @@ async function loadDashboard() {
 
 async function loadUsers() {
     try {
+        const token = window.getCurrentSession()?.access_token;
         const response = await fetch('/api/admin/users', {
-            headers: { 'Authorization': `Bearer ${window.currentSession?.access_token}` }
+            headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await response.json();
         const container = document.getElementById('usersList');
@@ -301,11 +375,11 @@ async function loadUsers() {
             return;
         }
         container.innerHTML = data.users.map(user => `
-            <div class="user-item">
+            <div class="user-item" data-user-id="${user.id}">
                 <div>
                     <strong>${user.name}</strong>
                     <span class="role-badge ${user.role}">${user.role}</span>
-                    ${user.online_status ? '<span style="color: #00a884;">● Online</span>' : '<span style="color: var(--text-muted);">○ Offline</span>'}
+                    <span class="online-indicator ${user.online_status ? 'online' : 'offline'}"></span>
                 </div>
                 <span style="font-size: 0.8rem; color: var(--text-secondary);">
                     ${user.email || 'No email'}
@@ -319,8 +393,9 @@ async function loadUsers() {
 
 async function loadConversationsAdmin() {
     try {
+        const token = window.getCurrentSession()?.access_token;
         const response = await fetch('/api/messages/conversations', {
-            headers: { 'Authorization': `Bearer ${window.currentSession?.access_token}` }
+            headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await response.json();
         const container = document.getElementById('conversationsList');
@@ -351,8 +426,9 @@ async function loadConversationsAdmin() {
 
 async function loadAuditLogs() {
     try {
+        const token = window.getCurrentSession()?.access_token;
         const response = await fetch('/api/admin/audit-logs', {
-            headers: { 'Authorization': `Bearer ${window.currentSession?.access_token}` }
+            headers: { 'Authorization': `Bearer ${token}` }
         });
         const data = await response.json();
         const container = document.getElementById('auditLogsList');
@@ -396,12 +472,28 @@ function switchAdminView(view) {
 
 async function handleLogout() {
     try {
+        if (socket) {
+            socket.disconnect();
+            socket = null;
+        }
         await window.signOutWithSupabase();
         currentAdmin = null;
         document.getElementById('adminApp').classList.add('hidden');
         document.getElementById('authContainer').classList.remove('hidden');
     } catch (err) {
         console.error('Logout error:', err);
+    }
+}
+
+function togglePasswordVisibility(inputId, buttonElement) {
+    const input = document.getElementById(inputId);
+    const icon = buttonElement.querySelector('i');
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.className = 'fa-regular fa-eye-slash';
+    } else {
+        input.type = 'password';
+        icon.className = 'fa-regular fa-eye';
     }
 }
 
