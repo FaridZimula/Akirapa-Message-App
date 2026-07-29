@@ -272,6 +272,13 @@
   "messageId": 15,
   "auditLogs": [
     {
+      "id": 1785284932129,
+      "actorId": "user_6",
+      "action": "logout",
+      "detail": "Signed out",
+      "createdAt": "2026-07-29T00:28:52.129Z"
+    },
+    {
       "id": 1785284613737,
       "actorId": "user_6",
       "action": "login",
@@ -793,17 +800,17 @@
     }
   ],
   "sessions": {
-    "sess_1785284613735_4de4f46364106": {
-      "userId": "user_6",
+    "sess_1785284938156_71b993b2f1cd8": {
+      "userId": "user_5",
       "user": {
-        "id": "user_6",
-        "name": "Stuart Muyanja",
-        "username": "stuart",
-        "email": "stuart@akirapa.com",
+        "id": "user_5",
+        "name": "Farid Zimula",
+        "username": "farid",
+        "email": "farid@akirapa.com",
         "password": "123456",
-        "phoneNumber": "+1 604 555 0106",
-        "role": "ADMIN",
-        "createdAt": "2026-01-03T09:15:00.000Z"
+        "phoneNumber": "+1 604 555 0105",
+        "role": "FAMILY_MEMBER",
+        "createdAt": "2026-01-02T10:30:00.000Z"
       }
     }
   }
