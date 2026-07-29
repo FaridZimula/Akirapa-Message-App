@@ -50,12 +50,12 @@
 
         <div class="form-group">
           <label class="form-label" for="loginEmail">Username or Email Address</label>
-          <input type="text" id="loginEmail" class="form-input" placeholder="e.g. ava_caregiver or ava@akirapa.com" autocomplete="username" required>
+          <input type="text" id="loginEmail" class="form-input" placeholder="Enter your username or email" autocomplete="username" required>
         </div>
         <div class="form-group">
           <label class="form-label" for="loginPassword">Password</label>
           <div class="password-input-wrapper">
-            <input type="password" id="loginPassword" class="form-input password-input" placeholder="••••••••" autocomplete="current-password" required>
+            <input type="password" id="loginPassword" class="form-input password-input" placeholder="Enter your password" autocomplete="current-password" required>
             <button type="button" class="password-toggle-btn" onclick="togglePasswordVisibility('loginPassword', this)" tabindex="-1">
               <i class="fa-regular fa-eye"></i>
             </button>
@@ -75,49 +75,6 @@
         
         <div style="margin-top: 12px; text-align: center; font-size: 0.75rem; color: var(--text-muted);">
           <i class="fa-solid fa-shield-halved"></i> Session will persist until you sign out
-        </div>
-
-        <!-- QUICK DEMO LOGIN ACCOUNTS PANEL -->
-        <div style="margin-top: 20px; padding: 16px; background: var(--bg-tertiary); border: 1px solid var(--border-color); border-radius: var(--radius-md);">
-          <div style="font-size: 0.78rem; font-weight: 800; color: var(--text-secondary); margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;">
-            <span><i class="fa-solid fa-key" style="color: var(--accent-green);"></i> QUICK DEMO LOGIN ACCOUNTS</span>
-            <span style="font-size: 0.68rem; color: var(--text-muted);">1-Click Sign In</span>
-          </div>
-          
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-            <!-- CAREGIVERS -->
-            <button type="button" onclick="quickLogin('andrew@akirapa.com', '123456')" style="text-align: left; padding: 8px 10px; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: var(--radius-sm); cursor: pointer; color: var(--text-primary); transition: all 0.2s;">
-              <div style="font-size: 0.76rem; font-weight: 700; color: #34d399;">💚 Andrew (Caregiver)</div>
-              <div style="font-size: 0.66rem; color: var(--text-muted);">andrew@akirapa.com</div>
-            </button>
-
-            <button type="button" onclick="quickLogin('ava@akirapa.com', '123456')" style="text-align: left; padding: 8px 10px; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: var(--radius-sm); cursor: pointer; color: var(--text-primary); transition: all 0.2s;">
-              <div style="font-size: 0.76rem; font-weight: 700; color: #34d399;">💚 Ava (Caregiver)</div>
-              <div style="font-size: 0.66rem; color: var(--text-muted);">ava@akirapa.com</div>
-            </button>
-
-            <!-- FAMILY MEMBERS -->
-            <button type="button" onclick="quickLogin('farid@akirapa.com', '123456')" style="text-align: left; padding: 8px 10px; background: rgba(139, 92, 246, 0.1); border: 1px solid rgba(139, 92, 246, 0.3); border-radius: var(--radius-sm); cursor: pointer; color: var(--text-primary); transition: all 0.2s;">
-              <div style="font-size: 0.76rem; font-weight: 700; color: #a78bfa;">💜 Farid (Family)</div>
-              <div style="font-size: 0.66rem; color: var(--text-muted);">farid@akirapa.com</div>
-            </button>
-
-            <button type="button" onclick="quickLogin('mina@akirapa.com', '123456')" style="text-align: left; padding: 8px 10px; background: rgba(139, 92, 246, 0.1); border: 1px solid rgba(139, 92, 246, 0.3); border-radius: var(--radius-sm); cursor: pointer; color: var(--text-primary); transition: all 0.2s;">
-              <div style="font-size: 0.76rem; font-weight: 700; color: #a78bfa;">💜 Mina (Family)</div>
-              <div style="font-size: 0.66rem; color: var(--text-muted);">mina@akirapa.com</div>
-            </button>
-
-            <!-- ADMINS -->
-            <button type="button" onclick="quickLogin('stuart@akirapa.com', '123456')" style="text-align: left; padding: 8px 10px; background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: var(--radius-sm); cursor: pointer; color: var(--text-primary); transition: all 0.2s;">
-              <div style="font-size: 0.76rem; font-weight: 700; color: #fbbf24;">👑 Stuart (Admin)</div>
-              <div style="font-size: 0.66rem; color: var(--text-muted);">stuart@akirapa.com</div>
-            </button>
-
-            <button type="button" onclick="quickLogin('jordan@akirapa.com', '123456')" style="text-align: left; padding: 8px 10px; background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: var(--radius-sm); cursor: pointer; color: var(--text-primary); transition: all 0.2s;">
-              <div style="font-size: 0.76rem; font-weight: 700; color: #fbbf24;">👑 Jordan (Admin)</div>
-              <div style="font-size: 0.66rem; color: var(--text-muted);">jordan@akirapa.com</div>
-            </button>
-          </div>
         </div>
       </form>
 
@@ -262,6 +219,23 @@
           <span class="role-badge CAREGIVER" id="activeChatSecurityBadge">
             <i class="fa-solid fa-lock"></i> AES-256
           </span>
+          <div class="chat-menu-wrapper" style="position: relative;">
+            <button class="icon-btn" title="Chat Room Menu Options" onclick="toggleChatMenu(event)">
+              <i class="fa-solid fa-ellipsis-vertical" style="font-size: 1.2rem;"></i>
+            </button>
+            <div id="chatMenuDropdown" class="chat-menu-dropdown hidden">
+              <button class="menu-item" onclick="closeCurrentChatRoom()">
+                <i class="fa-solid fa-folder-closed" style="color: #60a5fa;"></i> Close Active Chat (Pause Receipts)
+              </button>
+              <button class="menu-item" id="terminateMenuBtn" onclick="terminateCurrentChatRoom()">
+                <i class="fa-solid fa-ban" style="color: #ef4444;"></i> Terminate Chat Room (Permanent)
+              </button>
+              <div class="menu-divider"></div>
+              <button class="menu-item" onclick="openSettingsModal()">
+                <i class="fa-solid fa-gear" style="color: var(--accent-green);"></i> Account & Pod Settings
+              </button>
+            </div>
+          </div>
         </div>
       </header>
 
@@ -279,6 +253,20 @@
       <!-- CHAT FOOTER -->
       <footer class="chat-footer" id="chatFooter">
         <div id="chatStatusNotice" class="chat-status-notice hidden"></div>
+
+        <!-- REPLY PREVIEW BAR -->
+        <div id="replyPreviewBar" class="reply-preview-bar hidden">
+          <div class="reply-preview-content">
+            <i class="fa-solid fa-reply" style="color: var(--accent-green);"></i>
+            <div>
+              <div class="reply-sender" id="replyPreviewSender">Replying to User</div>
+              <div class="reply-text" id="replyPreviewText">Message snippet...</div>
+            </div>
+          </div>
+          <button type="button" class="icon-btn" onclick="cancelReply()" title="Cancel Reply">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
         
         <div id="standardInputBar" class="flex items-center gap-2" style="width: 100%;">
           <button class="icon-btn" title="Attach Photo or Video" onclick="triggerFileInput()">
@@ -325,6 +313,38 @@
         <i class="fa-solid fa-xmark"></i>
       </button>
       <div id="modalMediaContainer"></div>
+    </div>
+  </div>
+
+  <!-- ==================== FORWARD MESSAGE MODAL ==================== -->
+  <div id="forwardModal" class="modal-overlay hidden" onclick="closeForwardModal(event)">
+    <div class="modal-content" onclick="event.stopPropagation()" style="max-width: 420px; width: 90%; padding: 20px;">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+        <h3 style="margin: 0; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; color: var(--text-primary);">
+          <i class="fa-solid fa-share" style="color: var(--accent-green);"></i> Forward Message
+        </h3>
+        <button class="icon-btn" onclick="closeForwardModal()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div id="forwardConversationsList" style="max-height: 300px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px;"></div>
+    </div>
+  </div>
+
+  <!-- ==================== ROLE-BASED SETTINGS MODAL ==================== -->
+  <div id="settingsModal" class="modal-overlay hidden" onclick="closeSettingsModal(event)">
+    <div class="modal-content" onclick="event.stopPropagation()" style="max-width: 520px; width: 92%; padding: 24px;">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px;">
+        <h3 style="margin: 0; font-size: 1.15rem; display: flex; align-items: center; gap: 8px; color: var(--text-primary);">
+          <i class="fa-solid fa-sliders" style="color: var(--accent-green);"></i> <span id="settingsTitle">Pod Settings</span>
+        </h3>
+        <button class="icon-btn" onclick="closeSettingsModal()"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+      <div id="settingsContent" style="display: flex; flex-direction: column; gap: 14px;">
+        <!-- Dynamic role settings content injected here -->
+      </div>
+      <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; border-top: 1px solid var(--border-color); padding-top: 12px;">
+        <button type="button" class="btn-secondary" onclick="closeSettingsModal()" style="padding: 8px 16px; background: transparent; border: 1px solid var(--border-color); border-radius: var(--radius-md); color: var(--text-secondary); cursor: pointer;">Cancel</button>
+        <button type="button" class="btn-primary" onclick="saveRoleSettings()" style="width: auto; padding: 8px 20px;">Save Settings</button>
+      </div>
     </div>
   </div>
 
