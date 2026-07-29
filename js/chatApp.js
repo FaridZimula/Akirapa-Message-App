@@ -1127,8 +1127,66 @@ function togglePasswordVisibility(inputId, buttonElement) {
 }
 
 // ============================================================
-// CLEANUP
+// CHAT ROOM MENU & MODAL UI CONTROLS
 // ============================================================
+
+function toggleChatMenu(e) {
+    if (e) e.stopPropagation();
+    const dropdown = document.getElementById('chatMenuDropdown');
+    if (dropdown) {
+        dropdown.classList.toggle('hidden');
+    }
+}
+
+document.addEventListener('click', (e) => {
+    const dropdown = document.getElementById('chatMenuDropdown');
+    if (dropdown && !e.target.closest('.chat-menu-wrapper')) {
+        dropdown.classList.add('hidden');
+    }
+});
+
+function closeCurrentChatRoom() {
+    activeConversationId = null;
+    activeConversationName = '';
+    const activeTitle = document.getElementById('activeChatTitle');
+    const activeSubtitle = document.getElementById('activeChatSubtitle');
+    const messagesList = document.getElementById('messagesList');
+    if (activeTitle) activeTitle.textContent = 'Select a Conversation';
+    if (activeSubtitle) activeSubtitle.textContent = 'Secure Care Communication';
+    if (messagesList) messagesList.innerHTML = '<div style="text-align: center; color: var(--text-secondary); margin-top: 40px;">Select a conversation to start chatting.</div>';
+    const dropdown = document.getElementById('chatMenuDropdown');
+    if (dropdown) dropdown.classList.add('hidden');
+}
+
+function terminateCurrentChatRoom() {
+    if (!activeConversationId) return;
+    if (confirm('Are you sure you want to terminate this chat room?')) {
+        closeCurrentChatRoom();
+    }
+}
+
+function openSettingsModal() {
+    const modal = document.getElementById('settingsModal');
+    if (modal) modal.classList.remove('hidden');
+    const dropdown = document.getElementById('chatMenuDropdown');
+    if (dropdown) dropdown.classList.add('hidden');
+}
+
+function closeSettingsModal() {
+    const modal = document.getElementById('settingsModal');
+    if (modal) modal.classList.add('hidden');
+}
+
+function saveRoleSettings() {
+    closeSettingsModal();
+}
+
+window.toggleChatMenu = toggleChatMenu;
+window.closeCurrentChatRoom = closeCurrentChatRoom;
+window.terminateCurrentChatRoom = terminateCurrentChatRoom;
+window.openSettingsModal = openSettingsModal;
+window.closeSettingsModal = closeSettingsModal;
+window.saveRoleSettings = saveRoleSettings;
 
 window.addEventListener('beforeunload', function() {
     if (eventSource) {

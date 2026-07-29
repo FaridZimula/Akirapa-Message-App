@@ -185,11 +185,16 @@ function loadState() {
                 }
             });
         }
-        if (!parsed.conversations) {
+        if (!Array.isArray(parsed.users)) parsed.users = initialUsers;
+        if (!Array.isArray(parsed.messages)) parsed.messages = initialMessages;
+        if (!Array.isArray(parsed.conversations)) {
             parsed.conversations = [
                 { id: 'conv_user_1_user_2', participants: ['user_1', 'user_2'], createdAt: '2026-01-05T09:00:00.000Z' }
             ];
         }
+        if (!Array.isArray(parsed.auditLogs)) parsed.auditLogs = [];
+        if (!parsed.messageId) parsed.messageId = 3;
+
         if (parsed.sessions && typeof parsed.sessions === 'object') {
             Object.entries(parsed.sessions).forEach(([token, sessData]) => {
                 sessions.set(token, sessData);
@@ -284,6 +289,9 @@ function sanitizeUser(user) {
 }
 
 function createAuditLog(actorId, action, detail) {
+    if (!Array.isArray(state.auditLogs)) {
+        state.auditLogs = [];
+    }
     const log = {
         id: Date.now(),
         actorId,
@@ -296,21 +304,26 @@ function createAuditLog(actorId, action, detail) {
 }
 
 function buildConversationList(user) {
-    const convs = [];
-    const seen = new Set();
-    const isAdmin = user.role === 'ADMIN';
+    if (!user) return [];
+    try {
+        const convs = [];
+        const seen = new Set();
+        const isAdmin = user.role === 'ADMIN';
+        const allUsers = Array.isArray(state.users) ? state.users : [];
+        const allMessages = Array.isArray(state.messages) ? state.messages : [];
+        const allConversations = Array.isArray(state.conversations) ? state.conversations : [];
 
-    if (Array.isArray(state.conversations)) {
-        state.conversations.forEach((conv) => {
-            const isParticipant = conv.participants && conv.participants.includes(user.id);
+        allConversations.forEach((conv) => {
+            if (!conv || !conv.id) return;
+            const isParticipant = conv.participants && Array.isArray(conv.participants) && conv.participants.includes(user.id);
             if (isAdmin || isParticipant) {
                 const key = conv.id;
                 seen.add(key);
                 const otherId = conv.participants ? conv.participants.find((id) => id !== user.id) : null;
-                const partner = state.users.find((candidate) => candidate.id === otherId);
-                const conversationMessages = state.messages
-                    .filter((item) => item.conversationId === key)
-                    .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+                const partner = allUsers.find((candidate) => candidate && candidate.id === otherId);
+                const conversationMessages = allMessages
+                    .filter((item) => item && item.conversationId === key)
+                    .sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
                 const lastMessage = conversationMessages[conversationMessages.length - 1] || null;
                 
                 let titleName = conv.name;
@@ -318,7 +331,7 @@ function buildConversationList(user) {
                     titleName = partner.name;
                 } else if (!titleName && conv.participants && conv.participants.length > 0) {
                     const participantNames = conv.participants
-                        .map(pid => state.users.find(u => u.id === pid)?.name)
+                        .map(pid => allUsers.find(u => u && u.id === pid)?.name)
                         .filter(Boolean);
                     if (participantNames.length > 0) titleName = participantNames.join(' & ');
                 }
@@ -333,60 +346,64 @@ function buildConversationList(user) {
                     last_message_time: lastMessage ? lastMessage.createdAt : conv.createdAt || null,
                     online_status: otherId ? onlineUsers.has(otherId) : false,
                     participants: conv.participants ? conv.participants.map(pid => {
-                        const pUser = state.users.find(u => u.id === pid);
+                        const pUser = allUsers.find(u => u && u.id === pid);
                         return pUser ? sanitizeUser(pUser) : { id: pid, name: 'User' };
-                    }) : []
+                    }).filter(Boolean) : []
                 });
             }
         });
-    }
 
-    state.messages.forEach((message) => {
-        let otherId = message.senderId === user.id ? message.recipientId : message.senderId;
-        if (!otherId && message.conversationId.startsWith('conv_')) {
-            const parts = message.conversationId.replace('conv_', '').split('_');
-            otherId = parts.find((id) => id !== user.id);
-        }
-        
-        const key = message.conversationId;
-        if (seen.has(key)) return;
-        
-        const parts = key.startsWith('conv_') ? key.replace('conv_', '').split('_') : [];
-        const isParticipant = message.senderId === user.id || message.recipientId === user.id || parts.includes(user.id);
-        
-        if (isAdmin || isParticipant) {
-            seen.add(key);
-            const partner = state.users.find((candidate) => candidate.id === otherId);
-            const conversationMessages = state.messages
-                .filter((item) => item.conversationId === key)
-                .sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
-            const lastMessage = conversationMessages[conversationMessages.length - 1] || null;
-            
-            let titleName = partner ? partner.name : 'Care Pod Chat';
-            if (parts.length === 2) {
-                const u1 = state.users.find(u => u.id === parts[0]);
-                const u2 = state.users.find(u => u.id === parts[1]);
-                if (u1 && u2) {
-                    titleName = `${u1.name} & ${u2.name}`;
-                }
+        allMessages.forEach((message) => {
+            if (!message || !message.conversationId) return;
+            let otherId = message.senderId === user.id ? message.recipientId : message.senderId;
+            if (!otherId && typeof message.conversationId === 'string' && message.conversationId.startsWith('conv_')) {
+                const parts = message.conversationId.replace('conv_', '').split('_');
+                otherId = parts.find((id) => id !== user.id);
             }
+            
+            const key = message.conversationId;
+            if (!key || seen.has(key)) return;
+            
+            const parts = (typeof key === 'string' && key.startsWith('conv_')) ? key.replace('conv_', '').split('_') : [];
+            const isParticipant = message.senderId === user.id || message.recipientId === user.id || parts.includes(user.id);
+            
+            if (isAdmin || isParticipant) {
+                seen.add(key);
+                const partner = allUsers.find((candidate) => candidate && candidate.id === otherId);
+                const conversationMessages = allMessages
+                    .filter((item) => item && item.conversationId === key)
+                    .sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
+                const lastMessage = conversationMessages[conversationMessages.length - 1] || null;
+                
+                let titleName = partner ? partner.name : 'Care Pod Chat';
+                if (parts.length === 2) {
+                    const u1 = allUsers.find(u => u && u.id === parts[0]);
+                    const u2 = allUsers.find(u => u && u.id === parts[1]);
+                    if (u1 && u2) {
+                        titleName = `${u1.name} & ${u2.name}`;
+                    }
+                }
 
-            const existingConvRec = state.conversations ? state.conversations.find(c => c.id === key) : null;
-            convs.push({
-                id: key,
-                name: titleName,
-                role: partner ? partner.role : null,
-                status: existingConvRec ? (existingConvRec.status || 'active') : 'active',
-                isParticipant: !!isParticipant,
-                last_message: lastMessage ? (lastMessage.text || lastMessage.mediaName || 'Shared media' ) : null,
-                last_message_time: lastMessage ? lastMessage.createdAt : null,
-                online_status: otherId ? onlineUsers.has(otherId) : false,
-                participants: partner ? [sanitizeUser(partner)] : []
-            });
-        }
-    });
+                const existingConvRec = allConversations.find(c => c && c.id === key);
+                convs.push({
+                    id: key,
+                    name: titleName,
+                    role: partner ? partner.role : null,
+                    status: existingConvRec ? (existingConvRec.status || 'active') : 'active',
+                    isParticipant: !!isParticipant,
+                    last_message: lastMessage ? (lastMessage.text || lastMessage.mediaName || 'Shared media') : null,
+                    last_message_time: lastMessage ? lastMessage.createdAt : null,
+                    online_status: otherId ? onlineUsers.has(otherId) : false,
+                    participants: partner ? [sanitizeUser(partner)] : []
+                });
+            }
+        });
 
-    return convs.sort((a, b) => new Date(b.last_message_time || 0) - new Date(a.last_message_time || 0));
+        return convs.sort((a, b) => new Date(b.last_message_time || 0) - new Date(a.last_message_time || 0));
+    } catch (e) {
+        console.error('Error in buildConversationList:', e);
+        return [];
+    }
 }
 
 function verifyAuth(req, res, next) {
