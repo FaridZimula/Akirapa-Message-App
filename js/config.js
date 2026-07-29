@@ -1,22 +1,16 @@
-// Akirapa Messaging App - Supabase Configuration & Client Initialization
+// ============================================================
+// SUPABASE CONFIGURATION
+// ============================================================
 
-// ====================================================================
-// REPLACE THESE WITH YOUR SUPABASE PROJECT CREDENTIALS:
-// Find them at https://app.supabase.com -> Project Settings -> API
-// ====================================================================
-const SUPABASE_URL = window.ENV_SUPABASE_URL || "YOUR_SUPABASE_PROJECT_URL";
-const SUPABASE_ANON_KEY = window.ENV_SUPABASE_ANON_KEY || "YOUR_SUPABASE_ANON_KEY";
+const SUPABASE_URL = "https://nnxpzlcrongncnquelav.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5ueHB6bGNyb25nbmNucXVlbGF2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUxMjAxNDAsImV4cCI6MjEwMDY5NjE0MH0.EkGypc_arPAIwiolhOxDrmo8OqNnLCJzUelk7ouRMp8";
 
 let supabaseClient = null;
 
 function initSupabase() {
   if (typeof supabase === 'undefined') {
-    console.error('Supabase SDK not loaded. Ensure @supabase/supabase-js is included.');
+    console.error('Supabase SDK not loaded.');
     return null;
-  }
-
-  if (SUPABASE_URL === "YOUR_SUPABASE_PROJECT_URL" || !SUPABASE_URL) {
-    console.warn('⚠️ Supabase URL is not set in js/config.js. Please update SUPABASE_URL and SUPABASE_ANON_KEY.');
   }
 
   try {
@@ -24,15 +18,19 @@ function initSupabase() {
     window.supabaseClient = supabaseClient;
     return supabaseClient;
   } catch (err) {
-    console.error('Error initializing Supabase client:', err);
+    console.error('Error initializing Supabase:', err);
     return null;
   }
 }
 
-// Global accessor
 function getSupabase() {
   if (!supabaseClient) {
     return initSupabase();
   }
   return supabaseClient;
 }
+
+// Auto-initialize
+document.addEventListener('DOMContentLoaded', () => {
+  initSupabase();
+});

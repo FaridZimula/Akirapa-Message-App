@@ -111,7 +111,7 @@
         "user_5"
       ],
       "createdAt": "2026-07-29T00:06:50.841Z",
-      "status": "active"
+      "status": "ended"
     },
     {
       "id": "conv_user_5_user_6",
@@ -144,17 +144,17 @@
         "createdAt": "2026-01-02T10:30:00.000Z"
       }
     },
-    "sess_1785290338490_4dfea109ff377": {
-      "userId": "user_6",
+    "sess_1785294507553_70b005195490b": {
+      "userId": "user_5",
       "user": {
-        "id": "user_6",
-        "name": "Stuart Muyanja",
-        "username": "stuart",
-        "email": "stuart@akirapa.com",
+        "id": "user_5",
+        "name": "Farid Zimula",
+        "username": "farid",
+        "email": "farid@akirapa.com",
         "password": "123456",
-        "phoneNumber": "+1 604 555 0106",
-        "role": "ADMIN",
-        "createdAt": "2026-01-03T09:15:00.000Z"
+        "phoneNumber": "+1 604 555 0105",
+        "role": "FAMILY_MEMBER",
+        "createdAt": "2026-01-02T10:30:00.000Z"
       }
     }
   },
@@ -171,7 +171,7 @@
       "mediaUrl": null,
       "mediaType": null,
       "mediaName": null,
-      "isRead": false
+      "isRead": true
     },
     {
       "id": 2,
@@ -185,7 +185,7 @@
       "mediaUrl": null,
       "mediaType": null,
       "mediaName": null,
-      "isRead": false
+      "isRead": true
     },
     {
       "id": 3,
@@ -214,9 +214,254 @@
       "mediaType": null,
       "mediaName": null,
       "isRead": true
+    },
+    {
+      "id": 5,
+      "conversationId": "conv_user_4_user_6",
+      "senderId": "user_4",
+      "senderName": "Andrew Ssemwogerere",
+      "senderRole": "CAREGIVER",
+      "recipientId": "user",
+      "text": "hello there",
+      "createdAt": "2026-07-29T02:52:30.169Z",
+      "mediaUrl": null,
+      "mediaType": null,
+      "mediaName": null,
+      "isRead": true
+    },
+    {
+      "id": 6,
+      "conversationId": "conv_user_4_user_5",
+      "senderId": "user_4",
+      "senderName": "Andrew Ssemwogerere",
+      "senderRole": "CAREGIVER",
+      "recipientId": "user",
+      "text": "hei there",
+      "createdAt": "2026-07-29T02:52:39.161Z",
+      "mediaUrl": null,
+      "mediaType": null,
+      "mediaName": null,
+      "isRead": true
+    },
+    {
+      "id": 7,
+      "conversationId": "conv_user_5_user_6",
+      "senderId": "user_5",
+      "senderName": "Farid Zimula",
+      "senderRole": "FAMILY_MEMBER",
+      "recipientId": "user",
+      "text": "am fyn",
+      "createdAt": "2026-07-29T02:54:04.647Z",
+      "mediaUrl": null,
+      "mediaType": null,
+      "mediaName": null,
+      "isRead": true
+    },
+    {
+      "id": 8,
+      "conversationId": "conv_user_4_user_5",
+      "senderId": "user_5",
+      "senderName": "Farid Zimula",
+      "senderRole": "FAMILY_MEMBER",
+      "recipientId": "user",
+      "text": "yes",
+      "createdAt": "2026-07-29T02:54:25.345Z",
+      "mediaUrl": null,
+      "mediaType": null,
+      "mediaName": null,
+      "isRead": true
+    },
+    {
+      "id": 9,
+      "conversationId": "conv_user_4_user_5",
+      "senderId": "user_5",
+      "senderName": "Farid Zimula",
+      "senderRole": "FAMILY_MEMBER",
+      "recipientId": "user",
+      "text": "",
+      "createdAt": "2026-07-29T02:55:02.267Z",
+      "mediaUrl": "/uploads/1785293702249-opq49.jpg",
+      "mediaType": "image",
+      "mediaName": "post.jpg",
+      "isRead": true
     }
   ],
   "auditLogs": [
+    {
+      "id": 1785294377392,
+      "actorId": "user_5",
+      "action": "logout",
+      "detail": "Signed out",
+      "createdAt": "2026-07-29T03:06:17.392Z"
+    },
+    {
+      "id": 1785293962387,
+      "actorId": "user_5",
+      "action": "login",
+      "detail": "Signed in farid",
+      "createdAt": "2026-07-29T02:59:22.387Z"
+    },
+    {
+      "id": 1785293942333,
+      "actorId": "user_6",
+      "action": "logout",
+      "detail": "Signed out",
+      "createdAt": "2026-07-29T02:59:02.333Z"
+    },
+    {
+      "id": 1785293805454,
+      "actorId": "user_6",
+      "action": "admin_ended_conversation",
+      "detail": "Admin Stuart Muyanja set conversation conv_user_4_user_5 status to ended",
+      "createdAt": "2026-07-29T02:56:45.454Z"
+    },
+    {
+      "id": 1785293804594,
+      "actorId": "user_6",
+      "action": "admin_active_conversation",
+      "detail": "Admin Stuart Muyanja set conversation conv_user_4_user_5 status to active",
+      "createdAt": "2026-07-29T02:56:44.594Z"
+    },
+    {
+      "id": 1785293794462,
+      "actorId": "user_6",
+      "action": "admin_ended_conversation",
+      "detail": "Admin Stuart Muyanja set conversation conv_user_4_user_5 status to ended",
+      "createdAt": "2026-07-29T02:56:34.462Z"
+    },
+    {
+      "id": 1785293791412,
+      "actorId": "user_6",
+      "action": "admin_active_conversation",
+      "detail": "Admin Stuart Muyanja set conversation conv_user_4_user_5 status to active",
+      "createdAt": "2026-07-29T02:56:31.412Z"
+    },
+    {
+      "id": 1785293790223,
+      "actorId": "user_6",
+      "action": "admin_paused_conversation",
+      "detail": "Admin Stuart Muyanja set conversation conv_user_4_user_5 status to paused",
+      "createdAt": "2026-07-29T02:56:30.224Z"
+    },
+    {
+      "id": 1785293785812,
+      "actorId": "user_6",
+      "action": "admin_ended_conversation",
+      "detail": "Admin Stuart Muyanja set conversation conv_user_4_user_5 status to ended",
+      "createdAt": "2026-07-29T02:56:25.812Z"
+    },
+    {
+      "id": 1785293784898,
+      "actorId": "user_6",
+      "action": "admin_active_conversation",
+      "detail": "Admin Stuart Muyanja set conversation conv_user_4_user_5 status to active",
+      "createdAt": "2026-07-29T02:56:24.898Z"
+    },
+    {
+      "id": 1785293779474,
+      "actorId": "user_6",
+      "action": "admin_ended_conversation",
+      "detail": "Admin Stuart Muyanja set conversation conv_user_4_user_5 status to ended",
+      "createdAt": "2026-07-29T02:56:19.474Z"
+    },
+    {
+      "id": 1785293733315,
+      "actorId": "user_6",
+      "action": "login",
+      "detail": "Signed in stuart",
+      "createdAt": "2026-07-29T02:55:33.315Z"
+    },
+    {
+      "id": 1785293717085,
+      "actorId": "user_5",
+      "action": "logout",
+      "detail": "Signed out",
+      "createdAt": "2026-07-29T02:55:17.085Z"
+    },
+    {
+      "id": 1785293702268,
+      "actorId": "user_5",
+      "action": "message_sent",
+      "detail": "Sent message in conv_user_4_user_5",
+      "createdAt": "2026-07-29T02:55:02.268Z"
+    },
+    {
+      "id": 1785293679435,
+      "actorId": "user_5",
+      "action": "login",
+      "detail": "Signed in farid",
+      "createdAt": "2026-07-29T02:54:39.435Z"
+    },
+    {
+      "id": 1785293672072,
+      "actorId": "user_5",
+      "action": "logout",
+      "detail": "Signed out",
+      "createdAt": "2026-07-29T02:54:32.072Z"
+    },
+    {
+      "id": 1785293665347,
+      "actorId": "user_5",
+      "action": "message_sent",
+      "detail": "Sent message in conv_user_4_user_5",
+      "createdAt": "2026-07-29T02:54:25.347Z"
+    },
+    {
+      "id": 1785293644649,
+      "actorId": "user_5",
+      "action": "message_sent",
+      "detail": "Sent message in conv_user_5_user_6",
+      "createdAt": "2026-07-29T02:54:04.649Z"
+    },
+    {
+      "id": 1785293585402,
+      "actorId": "user_5",
+      "action": "login",
+      "detail": "Signed in farid",
+      "createdAt": "2026-07-29T02:53:05.402Z"
+    },
+    {
+      "id": 1785293564210,
+      "actorId": "user_4",
+      "action": "logout",
+      "detail": "Signed out",
+      "createdAt": "2026-07-29T02:52:44.210Z"
+    },
+    {
+      "id": 1785293559163,
+      "actorId": "user_4",
+      "action": "message_sent",
+      "detail": "Sent message in conv_user_4_user_5",
+      "createdAt": "2026-07-29T02:52:39.163Z"
+    },
+    {
+      "id": 1785293550170,
+      "actorId": "user_4",
+      "action": "message_sent",
+      "detail": "Sent message in conv_user_4_user_6",
+      "createdAt": "2026-07-29T02:52:30.170Z"
+    },
+    {
+      "id": 1785293500270,
+      "actorId": "user_4",
+      "action": "login",
+      "detail": "Signed in andrew",
+      "createdAt": "2026-07-29T02:51:40.270Z"
+    },
+    {
+      "id": 1785293007551,
+      "actorId": "user_6",
+      "action": "logout",
+      "detail": "Signed out",
+      "createdAt": "2026-07-29T02:43:27.551Z"
+    },
+    {
+      "id": 1785290338491,
+      "actorId": "user_6",
+      "action": "login",
+      "detail": "Signed in stuart",
+      "createdAt": "2026-07-29T01:58:58.491Z"
+    },
     {
       "id": 1785290331485,
       "actorId": "user_5",
@@ -274,5 +519,5 @@
       "createdAt": "2026-07-29T01:57:40.556Z"
     }
   ],
-  "messageId": 5
+  "messageId": 10
 }

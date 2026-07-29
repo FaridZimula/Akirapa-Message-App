@@ -1,148 +1,114 @@
 // ============================================================
-// AKIRAPA AUTH CLIENT - Synchronous Window Attach (Fail-Safe)
+// SUPABASE AUTH CLIENT
 // ============================================================
 
-(function() {
-    let currentUser = null;
-    let currentSession = null;
-    let refreshInterval = null;
+let currentUser = null;
+let currentSession = null;
 
-    function normalizeUser(user) {
-        if (!user) return null;
-        const metadata = user.user_metadata || {
-            name: user.name || user.email,
-            role: user.role || 'FAMILY_MEMBER',
-            phone_number: user.phoneNumber || null
-        };
+async function initSupabase() {
+  const client = getSupabase();
+  if (!client) return null;
 
-        return {
-            ...user,
-            user_metadata: metadata,
-            role: user.role || metadata.role || 'FAMILY_MEMBER',
-            email: user.email
-        };
+  try {
+    const { data: { session } } = await client.auth.getSession();
+    if (session) {
+      currentSession = session;
+      const { data: { user } } = await client.auth.getUser();
+      currentUser = user;
+      return session;
     }
+    return null;
+  } catch (err) {
+    console.error('Auth init error:', err);
+    return null;
+  }
+}
 
-    async function initSupabase() {
-        try {
-            const token = localStorage.getItem('akirapa_session_token');
-            if (token) {
-                const response = await fetch('/api/auth/me', {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-                const data = await response.json();
-                if (response.ok && data.user) {
-                    currentSession = { access_token: token };
-                    currentUser = normalizeUser(data.user);
-                    return currentSession;
-                }
-                localStorage.removeItem('akirapa_session_token');
-            }
-            return null;
-        } catch (err) {
-            console.error('Auth init error:', err);
-            return null;
-        }
+async function signUpWithSupabase(email, password, userData) {
+  const client = getSupabase();
+  if (!client) throw new Error('Supabase not initialized');
+
+  const { data, error } = await client.auth.signUp({
+    email,
+    password,
+    options: {
+      data: {
+        name: userData.name,
+        username: userData.username,
+        phone_number: userData.phoneNumber,
+        role: userData.role
+      }
     }
+  });
 
-    async function signUpWithSupabase(email, password, userData) {
-        try {
-            const response = await fetch('/api/auth/register', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    email,
-                    password,
-                    name: userData.name,
-                    username: userData.username,
-                    phoneNumber: userData.phoneNumber,
-                    role: userData.role,
-                    code: userData.code || '123456'
-                })
-            });
-            const data = await response.json();
-            if (!response.ok) throw new Error(data.error || 'Registration failed');
+  if (error) throw new Error(error.message);
+  
+  // Wait for profile to be created (trigger handles this)
+  await new Promise(r => setTimeout(r, 1000));
+  
+  currentSession = data.session;
+  currentUser = data.user;
+  return { user: currentUser, session: currentSession };
+}
 
-            currentSession = data.session;
-            currentUser = normalizeUser(data.user);
-            localStorage.setItem('akirapa_session_token', data.session.access_token);
-            return { user: currentUser, session: currentSession };
-        } catch (err) {
-            throw err;
-        }
+async function signInWithSupabase(email, password) {
+  const client = getSupabase();
+  if (!client) throw new Error('Supabase not initialized');
+
+  const { data, error } = await client.auth.signInWithPassword({
+    email,
+    password
+  });
+
+  if (error) throw new Error(error.message);
+
+  currentSession = data.session;
+  currentUser = data.user;
+  return { user: currentUser, session: currentSession };
+}
+
+async function signOutWithSupabase() {
+  const client = getSupabase();
+  if (!client) return;
+
+  await client.auth.signOut();
+  currentUser = null;
+  currentSession = null;
+  localStorage.removeItem('supabase_session');
+}
+
+function getCurrentUser() {
+  return currentUser;
+}
+
+function getCurrentSession() {
+  return currentSession;
+}
+
+async function signInWithGoogle(email, name, role) {
+  // For Google auth, we'll use Supabase's built-in OAuth
+  const client = getSupabase();
+  if (!client) throw new Error('Supabase not initialized');
+
+  const { data, error } = await client.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      redirectTo: window.location.origin
     }
+  });
 
-    async function signInWithSupabase(email, password) {
-        try {
-            const response = await fetch('/api/auth/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password })
-            });
-            const data = await response.json();
-            if (!response.ok) throw new Error(data.error || 'Login failed');
+  if (error) throw new Error(error.message);
+  
+  // The user will be redirected to Google
+  // After redirect, the session will be available
+  return { url: data.url };
+}
 
-            currentSession = data.session;
-            currentUser = normalizeUser(data.user);
-            localStorage.setItem('akirapa_session_token', data.session.access_token);
-            return { user: currentUser, session: currentSession };
-        } catch (err) {
-            throw err;
-        }
-    }
-
-    async function signOutWithSupabase() {
-        try {
-            if (currentSession?.access_token) {
-                await fetch('/api/auth/logout', {
-                    method: 'POST',
-                    headers: { Authorization: `Bearer ${currentSession.access_token}` }
-                });
-            }
-        } catch (err) {
-            console.error('Logout error:', err);
-        } finally {
-            localStorage.removeItem('akirapa_session_token');
-            currentUser = null;
-            currentSession = null;
-        }
-    }
-
-    function getCurrentUser() {
-        return currentUser;
-    }
-
-    function getCurrentSession() {
-        return currentSession;
-    }
-
-    async function signInWithGoogle(email, name, role) {
-        try {
-            const response = await fetch('/api/auth/google', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, name, role })
-            });
-            const data = await response.json();
-            if (!response.ok) throw new Error(data.error || 'Google authentication failed');
-
-            currentSession = data.session;
-            currentUser = normalizeUser(data.user);
-            localStorage.setItem('akirapa_session_token', data.session.access_token);
-            return { user: currentUser, session: currentSession };
-        } catch (err) {
-            throw err;
-        }
-    }
-
-    // Attach all functions synchronously to window immediately
-    window.initSupabase = initSupabase;
-    window.signUpWithSupabase = signUpWithSupabase;
-    window.signInWithSupabase = signInWithSupabase;
-    window.signInWithGoogle = signInWithGoogle;
-    window.signOutWithSupabase = signOutWithSupabase;
-    window.getCurrentUser = getCurrentUser;
-    window.getCurrentSession = getCurrentSession;
-
-    console.log('✅ Auth client initialized and attached to window');
-})();
+// Attach to window
+window.initSupabase = initSupabase;
+window.signUpWithSupabase = signUpWithSupabase;
+window.signInWithSupabase = signInWithSupabase;
+window.signInWithGoogle = signInWithGoogle;
+window.signOutWithSupabase = signOutWithSupabase;
+window.getCurrentUser = getCurrentUser;
+window.getCurrentSession = getCurrentSession;

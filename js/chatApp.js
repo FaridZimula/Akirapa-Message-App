@@ -106,7 +106,7 @@ function connectSocket() {
         socket = null;
     }
 
-    const socketUrl = window.location.protocol.startsWith('http') ? window.location.origin : 'http://localhost:3001';
+    const socketUrl = window.location.origin;
 
     socket = io(socketUrl, {
         auth: { token },
