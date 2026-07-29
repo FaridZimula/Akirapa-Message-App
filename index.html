@@ -250,7 +250,15 @@
           </div>
         </div>
 
-        <div class="header-actions">
+        <div class="header-actions" style="display: flex; align-items: center; gap: 8px;">
+          <div id="adminControlsContainer" class="hidden" style="display: flex; gap: 6px; align-items: center;">
+            <button id="adminPauseBtn" class="btn-admin-action" onclick="toggleAdminConversationPause()" title="Pause Conversation">
+              <i class="fa-solid fa-pause"></i> Pause
+            </button>
+            <button id="adminEndBtn" class="btn-admin-action ban" onclick="toggleAdminConversationEnd()" title="End & Ban Conversation">
+              <i class="fa-solid fa-ban"></i> End / Ban
+            </button>
+          </div>
           <span class="role-badge CAREGIVER" id="activeChatSecurityBadge">
             <i class="fa-solid fa-lock"></i> AES-256
           </span>
@@ -270,6 +278,7 @@
 
       <!-- CHAT FOOTER -->
       <footer class="chat-footer" id="chatFooter">
+        <div id="chatStatusNotice" class="chat-status-notice hidden"></div>
         
         <div id="standardInputBar" class="flex items-center gap-2" style="width: 100%;">
           <button class="icon-btn" title="Attach Photo or Video" onclick="triggerFileInput()">

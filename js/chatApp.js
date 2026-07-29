@@ -10,31 +10,70 @@ let selectedFile = null;
 let currentUserRole = null;
 let eventSource = null;
 let socket = null;
+let lastInitializedUserId = null;
 let chatInitialized = false;
-let reconnectAttempts = 0;
-const MAX_RECONNECT_ATTEMPTS = 3;
 
-// ============================================================
-// INITIALIZATION
-// ============================================================
+window.resetChatApp = function() {
+    console.log('🧹 Resetting chat application state...');
+    if (socket) {
+        try { socket.disconnect(); } catch (e) {}
+        socket = null;
+    }
+    if (eventSource) {
+        try { eventSource.close(); } catch (e) {}
+        eventSource = null;
+    }
+    activeConversationId = null;
+    activeConversationName = '';
+    conversationsList = [];
+    currentMessages = [];
+    selectedFile = null;
+    currentUserRole = null;
+    chatInitialized = false;
+    window.chatInitialized = false;
+    lastInitializedUserId = null;
+
+    const threadsList = document.getElementById('threadsList');
+    const messagesList = document.getElementById('messagesList');
+    const title = document.getElementById('activeChatTitle');
+    const avatar = document.getElementById('activeChatAvatar');
+    const subtitle = document.getElementById('activeChatSubtitle');
+    const adminControls = document.getElementById('adminControlsContainer');
+    const chatStatusNotice = document.getElementById('chatStatusNotice');
+    const standardInputBar = document.getElementById('standardInputBar');
+
+    if (threadsList) threadsList.innerHTML = '';
+    if (messagesList) messagesList.innerHTML = '';
+    if (title) title.textContent = 'Select a Conversation';
+    if (avatar) avatar.innerHTML = '<i class="fa-solid fa-users"></i>';
+    if (subtitle) subtitle.textContent = 'Secure Care Communication';
+    if (adminControls) adminControls.classList.add('hidden');
+    if (chatStatusNotice) chatStatusNotice.classList.add('hidden');
+    if (standardInputBar) standardInputBar.classList.remove('hidden');
+};
 
 window.initChatApp = async function() {
-    // Prevent double initialization
-    if (chatInitialized) {
-        console.log('⚠️ Chat already initialized, skipping...');
-        return;
-    }
-    chatInitialized = true;
-    
     const user = window.getCurrentUser();
     if (!user) {
         console.error('❌ No user found for chat initialization');
         return;
     }
-    
+
+    if (chatInitialized && lastInitializedUserId === user.id) {
+        console.log('⚠️ Chat already initialized for user:', user.email);
+        return;
+    }
+
+    if (chatInitialized || (lastInitializedUserId && lastInitializedUserId !== user.id)) {
+        window.resetChatApp();
+    }
+
+    chatInitialized = true;
+    window.chatInitialized = true;
+    lastInitializedUserId = user.id;
     currentUserRole = user?.user_metadata?.role || user?.role || 'FAMILY_MEMBER';
     
-    console.log('📱 Initializing chat app for:', currentUserRole);
+    console.log('📱 Initializing chat app for:', currentUserRole, user.email);
     
     // Connect Socket.IO
     connectSocket();
@@ -42,7 +81,7 @@ window.initChatApp = async function() {
     // Load conversations
     await loadConversations();
     
-    // Connect live updates (SSE) - with no auto-refresh
+    // Connect live updates (SSE)
     connectLiveUpdates();
     
     if (conversationsList.length > 0) {
@@ -128,6 +167,19 @@ function connectSocket() {
         console.log('💬 New conversation notification');
         loadConversations();
     });
+
+    // Handle conversation status changes (Pause / End / Resume)
+    socket.on('conversation_status_changed', (data) => {
+        console.log('⚡ Conversation status changed:', data);
+        const conv = conversationsList.find(c => c.id === data.conversationId);
+        if (conv) {
+            conv.status = data.status;
+        }
+        if (activeConversationId === data.conversationId) {
+            updateChatInputAndHeaderStatus();
+        }
+        renderConversations(conversationsList);
+    });
 }
 
 // ============================================================
@@ -164,11 +216,18 @@ function connectLiveUpdates() {
             
             // Only update if we have data
             if (data) {
-                // Update conversations silently
-                loadConversations();
-                // Update messages if we're in a conversation
-                if (activeConversationId) {
-                    loadMessages();
+                if (data.type === 'conversation_status_changed') {
+                    const conv = conversationsList.find(c => c.id === data.conversationId);
+                    if (conv) conv.status = data.status;
+                    if (activeConversationId === data.conversationId) {
+                        updateChatInputAndHeaderStatus();
+                    }
+                    renderConversations(conversationsList);
+                } else {
+                    loadConversations();
+                    if (activeConversationId) {
+                        loadMessages();
+                    }
                 }
             }
         } catch (err) {
@@ -346,6 +405,44 @@ async function loadConversations() {
     }
 }
 
+function renderThreadItem(conv, isMonitored = false) {
+    const isActive = conv.id === activeConversationId ? 'active' : '';
+    const initial = (conv.name || 'C').charAt(0).toUpperCase();
+    const onlineStatus = conv.online_status ? '<span style="color: #00a884; font-size: 0.6rem;">●</span>' : '';
+    const roleBadge = conv.role ? `<span class="role-badge ${conv.role}" style="font-size: 0.6rem;">${conv.role.replace('_', ' ')}</span>` : '';
+    const participantCount = conv.participants && conv.participants.length > 0 ? 
+        `<span style="font-size: 0.6rem; color: var(--text-muted);">${conv.participants.length} participants</span>` : '';
+    
+    let statusTag = '';
+    if (conv.status === 'paused') {
+        statusTag = `<span class="role-badge" style="font-size: 0.58rem; background: rgba(245,158,11,0.2); color: #fbbf24; border: 1px solid rgba(245,158,11,0.4); margin-left: 4px;">⏸️ PAUSED</span>`;
+    } else if (conv.status === 'ended') {
+        statusTag = `<span class="role-badge" style="font-size: 0.58rem; background: rgba(239,68,68,0.2); color: #f87171; border: 1px solid rgba(239,68,68,0.4); margin-left: 4px;">🚫 ENDED</span>`;
+    }
+
+    const monitoredBadge = isMonitored ? `<span style="font-size: 0.6rem; color: #fbbf24; background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.3); padding: 1px 6px; border-radius: 4px; font-weight: 700;">👁️ OBSERVE</span>` : '';
+
+    return `
+        <div class="thread-item ${isActive}" onclick="selectConversation('${conv.id}', '${escapeJs(conv.name)}')">
+            <div class="avatar">${initial}</div>
+            <div class="thread-details">
+                <div class="thread-top">
+                    <span class="thread-title">${escapeHtml(conv.name)} ${onlineStatus} ${statusTag}</span>
+                    ${conv.last_message_time ? `<span class="thread-time">${new Date(conv.last_message_time).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>` : ''}
+                </div>
+                <div class="thread-bottom">
+                    <span class="thread-snippet">${escapeHtml(conv.last_message || 'No messages yet')}</span>
+                    <span style="display: flex; gap: 4px; align-items: center;">
+                        ${monitoredBadge}
+                        ${roleBadge}
+                        ${participantCount}
+                    </span>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
 function renderConversations(list) {
     const container = document.getElementById('threadsList');
     if (!container) return;
@@ -363,33 +460,52 @@ function renderConversations(list) {
         return;
     }
 
-    container.innerHTML = list.map(conv => {
-        const isActive = conv.id === activeConversationId ? 'active' : '';
-        const initial = (conv.name || 'C').charAt(0).toUpperCase();
-        const onlineStatus = conv.online_status ? '<span style="color: #00a884; font-size: 0.6rem;">●</span>' : '';
-        const roleBadge = conv.role ? `<span class="role-badge ${conv.role}" style="font-size: 0.6rem;">${conv.role.replace('_', ' ')}</span>` : '';
-        const participantCount = conv.participants && conv.participants.length > 0 ? 
-            `<span style="font-size: 0.6rem; color: var(--text-muted);">${conv.participants.length} participants</span>` : '';
+    const currentUserId = window.getCurrentUser()?.id;
 
-        return `
-            <div class="thread-item ${isActive}" onclick="selectConversation('${conv.id}', '${escapeJs(conv.name)}')">
-                <div class="avatar">${initial}</div>
-                <div class="thread-details">
-                    <div class="thread-top">
-                        <span class="thread-title">${escapeHtml(conv.name)} ${onlineStatus}</span>
-                        ${conv.last_message_time ? `<span class="thread-time">${new Date(conv.last_message_time).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</span>` : ''}
-                    </div>
-                    <div class="thread-bottom">
-                        <span class="thread-snippet">${escapeHtml(conv.last_message || 'No messages yet')}</span>
-                        <span style="display: flex; gap: 4px; align-items: center;">
-                            ${roleBadge}
-                            ${participantCount}
-                        </span>
-                    </div>
-                </div>
+    if (currentUserRole === 'ADMIN') {
+        const directChats = [];
+        const monitoredChats = [];
+
+        list.forEach(conv => {
+            const isParticipant = conv.isParticipant || (conv.participants && conv.participants.some(p => (p.id ? p.id === currentUserId : p === currentUserId)));
+            if (isParticipant) {
+                directChats.push(conv);
+            } else {
+                monitoredChats.push(conv);
+            }
+        });
+
+        let html = '';
+
+        // Direct Chats Section
+        html += `
+            <div class="sidebar-section-header" style="padding: 10px 16px 6px; font-size: 0.72rem; font-weight: 800; color: #a78bfa; letter-spacing: 0.5px; text-transform: uppercase; display: flex; align-items: center; justify-content: space-between;">
+                <span><i class="fa-solid fa-comments"></i> Direct Chats (${directChats.length})</span>
+                <button onclick="startNewConversation()" title="Start Direct Chat" style="background: transparent; border: none; color: #a78bfa; cursor: pointer; font-size: 0.8rem;"><i class="fa-solid fa-plus"></i></button>
             </div>
         `;
-    }).join('');
+        if (directChats.length === 0) {
+            html += `<div style="padding: 10px 16px; font-size: 0.78rem; color: var(--text-muted); font-style: italic;">No direct chats yet</div>`;
+        } else {
+            html += directChats.map(conv => renderThreadItem(conv, false)).join('');
+        }
+
+        // Monitored Pod Chats Section
+        html += `
+            <div class="sidebar-section-header" style="padding: 16px 16px 6px; font-size: 0.72rem; font-weight: 800; color: #fbbf24; letter-spacing: 0.5px; text-transform: uppercase; display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--border-color); margin-top: 10px;">
+                <span><i class="fa-solid fa-eye"></i> Monitored Care Pods (${monitoredChats.length})</span>
+            </div>
+        `;
+        if (monitoredChats.length === 0) {
+            html += `<div style="padding: 10px 16px; font-size: 0.78rem; color: var(--text-muted); font-style: italic;">No monitored caregiver-family pods</div>`;
+        } else {
+            html += monitoredChats.map(conv => renderThreadItem(conv, true)).join('');
+        }
+
+        container.innerHTML = html;
+    } else {
+        container.innerHTML = list.map(conv => renderThreadItem(conv, false)).join('');
+    }
 }
 
 function filterConversations() {
@@ -407,10 +523,134 @@ function selectConversation(conversationId, conversationName) {
     if (title) title.textContent = conversationName;
     if (avatar) avatar.textContent = conversationName.charAt(0).toUpperCase();
     loadMessages();
+    updateChatInputAndHeaderStatus();
     setupRealtimeSubscription();
     if (window.innerWidth <= 768) {
         document.getElementById('sidebar').classList.add('mobile-hidden');
         document.getElementById('chatWindow').classList.remove('mobile-hidden');
+    }
+}
+
+// ============================================================
+// ADMIN GOVERNANCE & CONVERSATION STATUS UI
+// ============================================================
+
+function updateChatInputAndHeaderStatus() {
+    if (!activeConversationId) return;
+
+    const conv = conversationsList.find(c => c.id === activeConversationId);
+    const currentStatus = conv ? (conv.status || 'active') : 'active';
+
+    const user = window.getCurrentUser();
+    const isParticipant = conv && conv.participants && conv.participants.some(p => (p.id ? p.id === user?.id : p === user?.id));
+    const isAdminObserver = currentUserRole === 'ADMIN' && !isParticipant;
+
+    const adminControlsContainer = document.getElementById('adminControlsContainer');
+    const adminPauseBtn = document.getElementById('adminPauseBtn');
+    const adminEndBtn = document.getElementById('adminEndBtn');
+    const chatStatusNotice = document.getElementById('chatStatusNotice');
+    const standardInputBar = document.getElementById('standardInputBar');
+
+    if (currentUserRole === 'ADMIN' && adminControlsContainer) {
+        adminControlsContainer.classList.remove('hidden');
+        if (adminPauseBtn) {
+            if (currentStatus === 'paused') {
+                adminPauseBtn.innerHTML = '<i class="fa-solid fa-play"></i> Lift Pause';
+                adminPauseBtn.className = 'btn-admin-action resume';
+            } else {
+                adminPauseBtn.innerHTML = '<i class="fa-solid fa-pause"></i> Pause';
+                adminPauseBtn.className = 'btn-admin-action';
+            }
+        }
+        if (adminEndBtn) {
+            if (currentStatus === 'ended') {
+                adminEndBtn.innerHTML = '<i class="fa-solid fa-rotate-left"></i> Lift Ban';
+                adminEndBtn.className = 'btn-admin-action resume';
+            } else {
+                adminEndBtn.innerHTML = '<i class="fa-solid fa-ban"></i> End / Ban';
+                adminEndBtn.className = 'btn-admin-action ban';
+            }
+        }
+    } else if (adminControlsContainer) {
+        adminControlsContainer.classList.add('hidden');
+    }
+
+    if (isAdminObserver) {
+        if (standardInputBar) standardInputBar.classList.add('hidden');
+        if (chatStatusNotice) {
+            chatStatusNotice.classList.remove('hidden');
+            chatStatusNotice.className = 'chat-status-notice admin-view';
+            chatStatusNotice.innerHTML = '<i class="fa-solid fa-shield-halved"></i> <strong>Admin View-Only Mode:</strong> You are observing this care pod conversation. Message posting is restricted for Admins in participant chat rooms.';
+        }
+    } else if (currentStatus === 'paused') {
+        if (standardInputBar) standardInputBar.classList.add('hidden');
+        if (chatStatusNotice) {
+            chatStatusNotice.classList.remove('hidden');
+            chatStatusNotice.className = 'chat-status-notice paused';
+            chatStatusNotice.innerHTML = '<i class="fa-solid fa-circle-pause"></i> <strong>Conversation Paused:</strong> An Admin has temporarily limited/paused messaging in this care pod.';
+        }
+    } else if (currentStatus === 'ended') {
+        if (standardInputBar) standardInputBar.classList.add('hidden');
+        if (chatStatusNotice) {
+            chatStatusNotice.classList.remove('hidden');
+            chatStatusNotice.className = 'chat-status-notice ended';
+            chatStatusNotice.innerHTML = '<i class="fa-solid fa-ban"></i> <strong>Conversation Ended:</strong> An Admin has ended/banned communication in this care pod.';
+        }
+    } else {
+        if (standardInputBar) standardInputBar.classList.remove('hidden');
+        if (chatStatusNotice) chatStatusNotice.classList.add('hidden');
+    }
+}
+
+window.toggleAdminConversationPause = async function() {
+    if (!activeConversationId) return;
+    const conv = conversationsList.find(c => c.id === activeConversationId);
+    const currentStatus = conv ? (conv.status || 'active') : 'active';
+    const newStatus = currentStatus === 'paused' ? 'active' : 'paused';
+    await setConversationStatus(activeConversationId, newStatus);
+};
+
+window.toggleAdminConversationEnd = async function() {
+    if (!activeConversationId) return;
+    const conv = conversationsList.find(c => c.id === activeConversationId);
+    const currentStatus = conv ? (conv.status || 'active') : 'active';
+    const newStatus = currentStatus === 'ended' ? 'active' : 'ended';
+    await setConversationStatus(activeConversationId, newStatus);
+};
+
+async function setConversationStatus(conversationId, status) {
+    try {
+        const token = window.getCurrentSession()?.access_token || localStorage.getItem('akirapa_session_token');
+        let res = await fetch(`/api/conversations/status`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ conversationId, status })
+        });
+        if (res.status === 404) {
+            // Fallback to route with path param
+            res = await fetch(`/api/conversations/${conversationId}/status`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ status })
+            });
+        }
+        const data = await res.json();
+        if (!res.ok) {
+            alert(data.error || 'Failed to update conversation status');
+            return;
+        }
+        const conv = conversationsList.find(c => c.id === conversationId);
+        if (conv) conv.status = status;
+        updateChatInputAndHeaderStatus();
+        renderConversations(conversationsList);
+    } catch (err) {
+        alert('Network error updating conversation status');
     }
 }
 

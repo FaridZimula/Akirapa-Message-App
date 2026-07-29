@@ -327,6 +327,8 @@ function buildConversationList(user) {
                     id: key,
                     name: titleName || 'Care Pod Chat',
                     role: partner ? partner.role : null,
+                    status: conv.status || 'active',
+                    isParticipant: !!isParticipant,
                     last_message: lastMessage ? (lastMessage.text || lastMessage.mediaName || 'Shared media') : 'No messages yet',
                     last_message_time: lastMessage ? lastMessage.createdAt : conv.createdAt || null,
                     online_status: otherId ? onlineUsers.has(otherId) : false,
@@ -369,10 +371,13 @@ function buildConversationList(user) {
                 }
             }
 
+            const existingConvRec = state.conversations ? state.conversations.find(c => c.id === key) : null;
             convs.push({
                 id: key,
                 name: titleName,
                 role: partner ? partner.role : null,
+                status: existingConvRec ? (existingConvRec.status || 'active') : 'active',
+                isParticipant: !!isParticipant,
                 last_message: lastMessage ? (lastMessage.text || lastMessage.mediaName || 'Shared media' ) : null,
                 last_message_time: lastMessage ? lastMessage.createdAt : null,
                 online_status: otherId ? onlineUsers.has(otherId) : false,
@@ -805,8 +810,19 @@ app.post('/api/messages', verifyAuth, checkUploadRateLimit, upload.single('file'
         isParticipant = parts.includes(req.user.id);
     }
 
+    if (isAdmin && !isParticipant) {
+        return res.status(403).json({ error: 'Admins cannot send messages in caregiver-family conversations (View-Only Mode).' });
+    }
+
     if (!isAdmin && !isParticipant) {
         return res.status(403).json({ error: 'Access denied: You are not a participant in this conversation' });
+    }
+
+    const currentStatus = conv ? (conv.status || 'active') : 'active';
+    if (currentStatus === 'paused') {
+        return res.status(403).json({ error: 'This conversation has been paused by an Admin.' });
+    } else if (currentStatus === 'ended') {
+        return res.status(403).json({ error: 'This conversation has been ended by an Admin.' });
     }
 
     let mediaUrl = null;
@@ -967,19 +983,12 @@ app.post('/api/conversations', verifyAuth, (req, res) => {
         saveState();
     }
     
-    const conversation = { id: conversationId, name: recipient.name, participantId };
+    const conversation = { id: conversationId, name: recipient.name, participantId, status: existingConv.status || 'active' };
     
     // Broadcast via SSE
     broadcastSseEvent(req.user.id, {
         type: 'conversation',
         conversation
-    });
-    broadcastSseEvent(participantId, {
-        type: 'conversation',
-        conversation: {
-            ...conversation,
-            name: req.user.name
-        }
     });
 
     // Notify via Socket.IO
@@ -993,6 +1002,73 @@ app.post('/api/conversations', verifyAuth, (req, res) => {
     
     res.json({ conversation });
 });
+
+// Admin - Update Conversation Status (Active, Paused, Ended)
+const handleConversationStatusUpdate = (req, res) => {
+    if (req.user.role !== 'ADMIN') {
+        return res.status(403).json({ error: 'Admin access required to change conversation status' });
+    }
+
+    const conversationId = req.params.id || req.body.conversationId;
+    const { status } = req.body;
+
+    if (!conversationId) {
+        return res.status(400).json({ error: 'conversationId required' });
+    }
+
+    if (!['active', 'paused', 'ended'].includes(status)) {
+        return res.status(400).json({ error: 'Invalid status. Must be active, paused, or ended.' });
+    }
+
+    if (!Array.isArray(state.conversations)) {
+        state.conversations = [];
+    }
+
+    let conv = state.conversations.find(c => c.id === conversationId);
+    if (!conv) {
+        let participants = [];
+        if (conversationId.startsWith('conv_')) {
+            participants = conversationId.replace('conv_', '').split('_');
+        }
+        conv = {
+            id: conversationId,
+            name: '',
+            participants,
+            status: 'active',
+            createdAt: new Date().toISOString()
+        };
+        state.conversations.push(conv);
+    }
+
+    conv.status = status;
+    saveState();
+
+    createAuditLog(req.user.id, `admin_${status}_conversation`, `Admin ${req.user.name} set conversation ${conversationId} status to ${status}`);
+
+    // Broadcast via Socket.IO to room and all clients
+    io.emit('conversation_status_changed', {
+        conversationId,
+        status,
+        updatedBy: req.user.id,
+        updatedByName: req.user.name
+    });
+
+    // Broadcast via SSE to all users
+    if (Array.isArray(state.users)) {
+        state.users.forEach(u => {
+            broadcastSseEvent(u.id, {
+                type: 'conversation_status_changed',
+                conversationId,
+                status
+            });
+        });
+    }
+
+    res.json({ success: true, conversationId, status });
+};
+
+app.post('/api/conversations/status', verifyAuth, handleConversationStatusUpdate);
+app.post('/api/conversations/:id/status', verifyAuth, handleConversationStatusUpdate);
 
 // Messages - Mark as Read
 app.post('/api/messages/read', verifyAuth, (req, res) => {

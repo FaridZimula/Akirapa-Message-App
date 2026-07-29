@@ -81,12 +81,9 @@ function showAppScreen() {
         badge.className = `role-badge ${role}`;
     }
     
-    // Only initialize chat once
-    if (window.initChatApp && !window.chatInitialized) {
-        window.chatInitialized = true;
+    // Initialize or re-initialize chat for active user
+    if (window.initChatApp) {
         window.initChatApp();
-    } else if (window.initChatApp) {
-        console.log('Chat already initialized');
     }
 }
 
@@ -278,10 +275,12 @@ window.quickLogin = quickLogin;
 
 async function handleLogout() {
     try {
+        if (window.resetChatApp) {
+            window.resetChatApp();
+        }
         await window.signOutWithSupabase();
         currentUser = null;
         localStorage.removeItem('savedEmail');
-        window.chatInitialized = false;
         showAuthScreen();
     } catch (err) {
         console.error('Logout error:', err);
