@@ -157,17 +157,17 @@
         "createdAt": "2026-01-02T10:30:00.000Z"
       }
     },
-    "sess_1785510059203_ab181c60bbd1b": {
-      "userId": "user_5",
+    "sess_1785516718102_20817b82065b4": {
+      "userId": "user_6",
       "user": {
-        "id": "user_5",
-        "name": "Farid Zimula",
-        "username": "farid",
-        "email": "farid@akirapa.com",
+        "id": "user_6",
+        "name": "Stuart Muyanja",
+        "username": "stuart",
+        "email": "stuart@akirapa.com",
         "password": "123456",
-        "phoneNumber": "+1 604 555 0105",
-        "role": "FAMILY_MEMBER",
-        "createdAt": "2026-01-02T10:30:00.000Z"
+        "phoneNumber": "+1 604 555 0106",
+        "role": "ADMIN",
+        "createdAt": "2026-01-03T09:15:00.000Z"
       }
     }
   },
@@ -310,10 +310,52 @@
       "mediaUrl": "/uploads/1785510664664-ahoap.jpg",
       "mediaType": "image",
       "mediaName": "photo_1785510664647.jpg",
-      "isRead": false
+      "isRead": true
+    },
+    {
+      "id": 11,
+      "conversationId": "conv_user_1785267173645_user_5",
+      "senderId": "user_5",
+      "senderName": "Farid Zimula",
+      "senderRole": "FAMILY_MEMBER",
+      "recipientId": "user",
+      "text": "hei",
+      "createdAt": "2026-07-31T15:32:08.573Z",
+      "mediaUrl": null,
+      "mediaType": null,
+      "mediaName": null,
+      "isRead": true
     }
   ],
   "auditLogs": [
+    {
+      "id": 1785516718105,
+      "actorId": "user_6",
+      "action": "login",
+      "detail": "Signed in stuart",
+      "createdAt": "2026-07-31T16:51:58.105Z"
+    },
+    {
+      "id": 1785513735867,
+      "actorId": "user_5",
+      "action": "logout",
+      "detail": "Signed out",
+      "createdAt": "2026-07-31T16:02:15.867Z"
+    },
+    {
+      "id": 1785511928574,
+      "actorId": "user_5",
+      "action": "message_sent",
+      "detail": "Sent message in conv_user_1785267173645_user_5",
+      "createdAt": "2026-07-31T15:32:08.574Z"
+    },
+    {
+      "id": 1785510664668,
+      "actorId": "user_5",
+      "action": "message_sent",
+      "detail": "Sent message in conv_user_1785267173645_user_5",
+      "createdAt": "2026-07-31T15:11:04.668Z"
+    },
     {
       "id": 1785510059204,
       "actorId": "user_5",
@@ -553,5 +595,5 @@
       "createdAt": "2026-07-29T01:57:40.556Z"
     }
   ],
-  "messageId": 11
+  "messageId": 12
 }

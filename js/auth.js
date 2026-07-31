@@ -68,14 +68,22 @@ function showAppScreen() {
     const name = document.getElementById('currentUserName');
     const badge = document.getElementById('currentUserBadge');
     
+    const metadata = user.user_metadata || {};
+    const avatarUrl = metadata.avatar_url || user.avatarUrl || user.avatar_url;
+    const userNameStr = metadata.name || user.name || user.email;
+
     if (avatar) {
-        avatar.textContent = (user.user_metadata?.name || user.email || 'U').charAt(0).toUpperCase();
+        if (avatarUrl) {
+            avatar.innerHTML = `<img src="${avatarUrl}" alt="Avatar" style="width:100%;height:100%;object-fit:cover;">`;
+        } else {
+            avatar.textContent = (userNameStr || 'U').charAt(0).toUpperCase();
+        }
     }
     if (name) {
-        name.textContent = user.user_metadata?.name || user.email;
+        name.textContent = userNameStr;
     }
     if (badge) {
-        const role = user.user_metadata?.role || 'FAMILY_MEMBER';
+        const role = metadata.role || user.role || 'FAMILY_MEMBER';
         badge.textContent = role.replace('_', ' ');
         badge.className = `role-badge ${role}`;
     }
@@ -274,18 +282,25 @@ window.quickLogin = quickLogin;
 
 async function handleLogout() {
     try {
+        console.log('🚪 Initiating logout...');
         if (window.resetChatApp) {
             window.resetChatApp();
         }
-        await window.signOutWithSupabase();
-        currentUser = null;
-        localStorage.removeItem('savedEmail');
-        showAuthScreen();
+        if (window.signOutWithSupabase) {
+            await window.signOutWithSupabase();
+        }
     } catch (err) {
-        console.error('Logout error:', err);
-        alert('Logout failed');
+        console.error('Logout notice during cleanup:', err);
+    } finally {
+        currentUser = null;
+        localStorage.removeItem('akirapa_session_token');
+        localStorage.removeItem('akirapa_user');
+        localStorage.removeItem('akirapa_last_active_conv');
+        showAuthScreen();
+        console.log('✅ User successfully logged out');
     }
 }
+window.handleLogout = handleLogout;
 
 function toggleTheme() {
     const currentTheme = document.documentElement.getAttribute('data-theme');

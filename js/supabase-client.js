@@ -155,7 +155,9 @@ async function signOutWithSupabase() {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` }
       });
-    } catch (e) {}
+    } catch (e) {
+      console.warn('Backend logout API call note:', e);
+    }
   }
 
   const client = getSupabase();
@@ -167,6 +169,7 @@ async function signOutWithSupabase() {
   currentSession = null;
   localStorage.removeItem('akirapa_session_token');
   localStorage.removeItem('akirapa_user');
+  localStorage.removeItem('akirapa_last_active_conv');
   localStorage.removeItem('supabase_session');
 }
 

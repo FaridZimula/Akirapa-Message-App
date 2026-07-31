@@ -408,6 +408,21 @@ async function loadConversations() {
 function renderThreadItem(conv, isMonitored = false) {
     const isActive = conv.id === activeConversationId ? 'active' : '';
     const initial = (conv.name || 'C').charAt(0).toUpperCase();
+
+    // Check conversation avatar, partner avatar, or participant avatar
+    let avatarUrl = conv.avatarUrl || conv.avatar_url || null;
+    if (!avatarUrl && conv.participants && conv.participants.length > 0) {
+        const currentUserId = window.getCurrentUser()?.id;
+        const otherParticipant = conv.participants.find(p => (p.id || p) !== currentUserId);
+        if (otherParticipant && typeof otherParticipant === 'object') {
+            avatarUrl = otherParticipant.avatarUrl || otherParticipant.avatar_url || otherParticipant.user_metadata?.avatar_url;
+        }
+    }
+
+    const avatarContent = avatarUrl ? 
+        `<img src="${avatarUrl}" alt="${escapeHtml(conv.name)}" style="width:100%;height:100%;object-fit:cover;">` : 
+        initial;
+
     const onlineStatus = conv.online_status ? '<span style="color: #42dcd7; font-size: 0.6rem;">●</span>' : '';
     const roleBadge = conv.role ? `<span class="role-badge ${conv.role}" style="font-size: 0.6rem;">${conv.role.replace('_', ' ')}</span>` : '';
     const participantCount = conv.participants && conv.participants.length > 0 ? 
@@ -424,7 +439,7 @@ function renderThreadItem(conv, isMonitored = false) {
 
     return `
         <div class="thread-item ${isActive}" onclick="selectConversation('${conv.id}', '${escapeJs(conv.name)}')">
-            <div class="avatar">${initial}</div>
+            <div class="avatar">${avatarContent}</div>
             <div class="thread-details">
                 <div class="thread-top">
                     <span class="thread-title">${escapeHtml(conv.name)} ${onlineStatus} ${statusTag}</span>
@@ -517,11 +532,31 @@ function filterConversations() {
 function selectConversation(conversationId, conversationName) {
     activeConversationId = conversationId;
     activeConversationName = conversationName;
+    localStorage.setItem('akirapa_last_active_conv', conversationId);
+
     renderConversations(conversationsList);
     const title = document.getElementById('activeChatTitle');
     const avatar = document.getElementById('activeChatAvatar');
     if (title) title.textContent = conversationName;
-    if (avatar) avatar.textContent = conversationName.charAt(0).toUpperCase();
+
+    const conv = conversationsList.find(c => c.id === conversationId);
+    let avatarUrl = conv ? (conv.avatarUrl || conv.avatar_url) : null;
+    if (!avatarUrl && conv && conv.participants && conv.participants.length > 0) {
+        const currentUserId = window.getCurrentUser()?.id;
+        const otherParticipant = conv.participants.find(p => (p.id || p) !== currentUserId);
+        if (otherParticipant && typeof otherParticipant === 'object') {
+            avatarUrl = otherParticipant.avatarUrl || otherParticipant.avatar_url || otherParticipant.user_metadata?.avatar_url;
+        }
+    }
+
+    if (avatar) {
+        if (avatarUrl) {
+            avatar.innerHTML = `<img src="${avatarUrl}" alt="${escapeHtml(conversationName)}" style="width:100%;height:100%;object-fit:cover;">`;
+        } else {
+            avatar.innerHTML = `<img src="logo.png" alt="Logo" style="width: 100%; height: 100%; object-fit: contain; padding: 4px;">`;
+        }
+    }
+
     loadMessages();
     updateChatInputAndHeaderStatus();
     setupRealtimeSubscription();
@@ -1158,6 +1193,8 @@ function closeCurrentChatRoom() {
     if (dropdown) dropdown.classList.add('hidden');
 }
 
+let _pendingAvatarUrl = null;
+
 function terminateCurrentChatRoom() {
     if (!activeConversationId) return;
     if (confirm('Are you sure you want to terminate this chat room?')) {
@@ -1167,9 +1204,185 @@ function terminateCurrentChatRoom() {
 
 function openSettingsModal() {
     const modal = document.getElementById('settingsModal');
-    if (modal) modal.classList.remove('hidden');
+    const content = document.getElementById('settingsContent');
+    const title = document.getElementById('settingsTitle');
     const dropdown = document.getElementById('chatMenuDropdown');
+    
     if (dropdown) dropdown.classList.add('hidden');
+    if (!modal) return;
+
+    if (title) title.textContent = 'Profile & App Settings';
+
+    const user = window.getCurrentUser() || {};
+    const metadata = user.user_metadata || {};
+    const name = metadata.name || user.name || '';
+    const username = metadata.username || user.username || '';
+    const phone = metadata.phone_number || metadata.phoneNumber || user.phoneNumber || '';
+    const bio = metadata.bio || user.bio || '';
+    const avatarUrl = metadata.avatar_url || user.avatar_url || '';
+    _pendingAvatarUrl = avatarUrl;
+
+    if (content) {
+        content.innerHTML = `
+            <!-- TAB BAR IN SETTINGS -->
+            <div style="display: flex; gap: 8px; border-bottom: 1.5px solid rgba(118, 29, 144, 0.2); padding-bottom: 8px; margin-bottom: 14px;">
+                <button type="button" id="tabSettingsProfile" class="auth-tab active" onclick="switchSettingsTab('profile')" style="padding: 8px 16px; font-size: 0.88rem;">
+                    <i class="fa-solid fa-user-gear"></i> Profile Details
+                </button>
+                <button type="button" id="tabSettingsPreferences" class="auth-tab" onclick="switchSettingsTab('preferences')" style="padding: 8px 16px; font-size: 0.88rem;">
+                    <i class="fa-solid fa-sliders"></i> Preferences
+                </button>
+            </div>
+
+            <!-- PROFILE SECTION -->
+            <div id="settingsProfileSection" style="display: flex; flex-direction: column; gap: 14px;">
+                <!-- Profile Picture Upload Area -->
+                <div style="display: flex; align-items: center; gap: 16px; background: rgba(118, 29, 144, 0.05); padding: 12px 16px; border-radius: var(--radius-md); border: 1.5px solid rgba(118, 29, 144, 0.2);">
+                    <div style="position: relative; width: 64px; height: 64px;">
+                        <div id="settingsAvatarPreview" class="avatar" style="width: 64px; height: 64px; font-size: 1.5rem; border: 2px solid #42dcd7;">
+                            ${avatarUrl ? `<img src="${avatarUrl}" alt="Avatar" style="width:100%;height:100%;object-fit:cover;">` : (name || 'U').charAt(0).toUpperCase()}
+                        </div>
+                    </div>
+                    <div>
+                        <button type="button" onclick="document.getElementById('profilePicInput').click()" style="padding: 8px 16px; background: #761d90; color: #ffffff; border: 1.5px solid #42dcd7; border-radius: var(--radius-sm); font-weight: 700; font-size: 0.82rem; cursor: pointer; display: flex; align-items: center; gap: 6px;">
+                            <i class="fa-solid fa-upload"></i> Upload Photo
+                        </button>
+                        <input type="file" id="profilePicInput" accept="image/*" class="hidden" onchange="handleProfilePicSelected(event)">
+                        <div style="font-size: 0.75rem; color: #761d90; margin-top: 4px; font-weight: 600;">JPG, PNG, GIF or WebP (max 5MB)</div>
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label class="form-label" for="profileNameInput">Full Name</label>
+                    <input type="text" id="profileNameInput" class="form-input" value="${escapeHtml(name)}" placeholder="Enter your full name">
+                </div>
+
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label class="form-label" for="profileUsernameInput">Username</label>
+                    <input type="text" id="profileUsernameInput" class="form-input" value="${escapeHtml(username)}" placeholder="Enter username">
+                </div>
+
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label class="form-label" for="profilePhoneInput">Phone Number</label>
+                    <input type="tel" id="profilePhoneInput" class="form-input" value="${escapeHtml(phone)}" placeholder="+1 (604) 555-0199">
+                </div>
+
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label class="form-label" for="profileBioInput">Care Specialty / Emergency Notes</label>
+                    <textarea id="profileBioInput" class="form-input" rows="2" placeholder="Add care details, shift notes, or emergency contacts...">${escapeHtml(bio)}</textarea>
+                </div>
+            </div>
+
+            <!-- PREFERENCES SECTION -->
+            <div id="settingsPreferencesSection" class="hidden" style="display: flex; flex-direction: column; gap: 12px;">
+                <div class="setting-item">
+                    <div>
+                        <div class="setting-title"><i class="fa-solid fa-bell" style="color: #42dcd7; margin-right: 6px;"></i> Care Notification Alerts</div>
+                        <div class="setting-desc">Play sound alert for incoming care pod messages</div>
+                    </div>
+                    <input type="checkbox" id="settingChimes" checked style="width: 20px; height: 20px; cursor: pointer; accent-color: #761d90;">
+                </div>
+
+                <div class="setting-item">
+                    <div>
+                        <div class="setting-title"><i class="fa-solid fa-triangle-exclamation" style="color: #761d90; margin-right: 6px;"></i> Emergency Priority Alerts</div>
+                        <div class="setting-desc">High-priority chime for urgent caregiver updates</div>
+                    </div>
+                    <input type="checkbox" id="settingUrgent" checked style="width: 20px; height: 20px; cursor: pointer; accent-color: #761d90;">
+                </div>
+
+                <div class="setting-item">
+                    <div>
+                        <div class="setting-title"><i class="fa-solid fa-eye" style="color: #42dcd7; margin-right: 6px;"></i> Read Receipts</div>
+                        <div class="setting-desc">Allow care pod members to see when messages are read</div>
+                    </div>
+                    <input type="checkbox" id="settingReceipts" checked style="width: 20px; height: 20px; cursor: pointer; accent-color: #761d90;">
+                </div>
+
+                <div class="setting-item">
+                    <div>
+                        <div class="setting-title"><i class="fa-solid fa-circle-user" style="color: #761d90; margin-right: 6px;"></i> Online Status Indicator</div>
+                        <div class="setting-desc">Show your active status to caregivers and family</div>
+                    </div>
+                    <input type="checkbox" id="settingOnline" checked style="width: 20px; height: 20px; cursor: pointer; accent-color: #761d90;">
+                </div>
+
+                <div class="setting-item">
+                    <div>
+                        <div class="setting-title"><i class="fa-solid fa-photo-film" style="color: #42dcd7; margin-right: 6px;"></i> Auto-Download Care Media</div>
+                        <div class="setting-desc">Auto-download photos and voice memos sent in care chats</div>
+                    </div>
+                    <input type="checkbox" id="settingAutoDownload" checked style="width: 20px; height: 20px; cursor: pointer; accent-color: #761d90;">
+                </div>
+            </div>
+        `;
+    }
+
+    modal.classList.remove('hidden');
+}
+
+function switchSettingsTab(tab) {
+    const profileSec = document.getElementById('settingsProfileSection');
+    const prefSec = document.getElementById('settingsPreferencesSection');
+    const profileTab = document.getElementById('tabSettingsProfile');
+    const prefTab = document.getElementById('tabSettingsPreferences');
+
+    if (tab === 'profile') {
+        if (profileSec) profileSec.classList.remove('hidden');
+        if (prefSec) prefSec.classList.add('hidden');
+        if (profileTab) profileTab.classList.add('active');
+        if (prefTab) prefTab.classList.remove('active');
+    } else {
+        if (profileSec) profileSec.classList.add('hidden');
+        if (prefSec) prefSec.classList.remove('hidden');
+        if (profileTab) profileTab.classList.remove('active');
+        if (prefTab) prefTab.classList.add('active');
+    }
+}
+
+function handleProfilePicSelected(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+        alert('Please select a valid image file.');
+        return;
+    }
+
+    // Hide Settings modal temporarily so Cropping window appears first & front-and-center
+    const settingsModal = document.getElementById('settingsModal');
+    if (settingsModal) settingsModal.classList.add('hidden');
+
+    const reader = new FileReader();
+    reader.onload = function(event) {
+        openCropModal(event.target.result, 'profile');
+    };
+    reader.readAsDataURL(file);
+}
+
+function handleFileSelected(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 10 * 1024 * 1024) {
+        alert('File size exceeds 10MB limit. Please choose a smaller file.');
+        e.target.value = '';
+        return;
+    }
+
+    if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            openCropModal(event.target.result, 'chat_file');
+        };
+        reader.readAsDataURL(file);
+    } else {
+        selectedFile = file;
+        const inputEl = document.getElementById('messageTextInput');
+        if (inputEl) {
+            inputEl.placeholder = `📎 ${file.name} (${(file.size / 1024).toFixed(1)} KB) - Press Send`;
+        }
+    }
 }
 
 function closeSettingsModal() {
@@ -1177,8 +1390,85 @@ function closeSettingsModal() {
     if (modal) modal.classList.add('hidden');
 }
 
-function saveRoleSettings() {
-    closeSettingsModal();
+async function saveRoleSettings() {
+    const nameInput = document.getElementById('profileNameInput');
+    const usernameInput = document.getElementById('profileUsernameInput');
+    const phoneInput = document.getElementById('profilePhoneInput');
+    const bioInput = document.getElementById('profileBioInput');
+    const statusMsg = document.getElementById('settingsSaveStatus');
+
+    const newName = nameInput ? nameInput.value.trim() : '';
+    const newUsername = usernameInput ? usernameInput.value.trim() : '';
+    const newPhone = phoneInput ? phoneInput.value.trim() : '';
+    const newBio = bioInput ? bioInput.value.trim() : '';
+
+    const user = window.getCurrentUser();
+    if (user) {
+        if (!user.user_metadata) user.user_metadata = {};
+        if (newName) user.user_metadata.name = newName;
+        if (newUsername) user.user_metadata.username = newUsername;
+        if (newPhone) user.user_metadata.phone_number = newPhone;
+        if (newBio) user.user_metadata.bio = newBio;
+        if (_pendingAvatarUrl) {
+            user.user_metadata.avatar_url = _pendingAvatarUrl;
+            user.avatarUrl = _pendingAvatarUrl;
+        }
+
+        localStorage.setItem('akirapa_user', JSON.stringify(user));
+
+        try {
+            const token = window.getCurrentSession()?.access_token || localStorage.getItem('akirapa_session_token');
+            if (token) {
+                const res = await fetch('/api/users/profile', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        name: newName,
+                        username: newUsername,
+                        phoneNumber: newPhone,
+                        bio: newBio,
+                        avatarUrl: _pendingAvatarUrl
+                    })
+                });
+                if (!res.ok) {
+                    console.warn(`Profile sync note: Endpoint returned status ${res.status}. Profile saved locally.`);
+                }
+            }
+        } catch (err) {
+            console.warn('Backend profile sync note (saved locally):', err);
+        }
+
+        // Update UI
+        const currentNameEl = document.getElementById('currentUserName');
+        const currentAvatarEl = document.getElementById('currentUserAvatar');
+
+        if (currentNameEl && newName) {
+            currentNameEl.textContent = newName;
+        }
+
+        if (currentAvatarEl) {
+            const activeAvatarUrl = _pendingAvatarUrl || user.user_metadata?.avatar_url || user.avatarUrl;
+            if (activeAvatarUrl) {
+                currentAvatarEl.innerHTML = `<img src="${activeAvatarUrl}" alt="Avatar" style="width:100%;height:100%;object-fit:cover;">`;
+            } else if (newName) {
+                currentAvatarEl.textContent = newName.charAt(0).toUpperCase();
+            }
+        }
+    }
+
+    if (statusMsg) {
+        statusMsg.style.display = 'block';
+        statusMsg.innerHTML = '<i class="fa-solid fa-circle-check" style="color: #761d90;"></i> Profile & settings saved successfully!';
+        setTimeout(() => {
+            statusMsg.style.display = 'none';
+            closeSettingsModal();
+        }, 1200);
+    } else {
+        closeSettingsModal();
+    }
 }
 
 window.toggleChatMenu = toggleChatMenu;
@@ -1202,11 +1492,136 @@ window.addEventListener('beforeunload', function() {
 console.log('✅ chatApp.js loaded successfully (no auto-refresh)');
 
 // ============================================================
-// CAMERA CAPTURE MODULE
+// CAMERA CAPTURE & CROPPER MODULES
 // ============================================================
 
 let cameraStream = null;
 let capturedBlob = null;
+
+let cropperInstance = null;
+let cropTargetContext = null; // 'profile' | 'chat_file' | 'camera'
+
+function openCropModal(imageSrc, context = 'profile') {
+    cropTargetContext = context;
+    const modal = document.getElementById('imageCropModal');
+    const imgEl = document.getElementById('cropperTargetImage');
+
+    if (!modal || !imgEl) return;
+
+    if (cropperInstance) {
+        cropperInstance.destroy();
+        cropperInstance = null;
+    }
+
+    imgEl.src = imageSrc;
+    modal.classList.remove('hidden');
+
+    setTimeout(() => {
+        cropperInstance = new Cropper(imgEl, {
+            aspectRatio: context === 'profile' ? 1 : NaN,
+            viewMode: 1,
+            dragMode: 'crop',
+            autoCropArea: 0.95,
+            restore: false,
+            guides: true,
+            center: true,
+            highlight: true,
+            cropBoxMovable: true,
+            cropBoxResizable: true
+        });
+    }, 100);
+}
+
+function rotateCropper(degree) {
+    if (cropperInstance) cropperInstance.rotate(degree);
+}
+
+function zoomCropper(ratio) {
+    if (cropperInstance) cropperInstance.zoom(ratio);
+}
+
+function resetCropper() {
+    if (cropperInstance) cropperInstance.reset();
+}
+
+function closeCropModal(e) {
+    if (e && e.target !== document.getElementById('imageCropModal') && !e.target.closest('.close-modal-btn')) {
+        if (e.target !== e.currentTarget) return;
+    }
+
+    if (cropperInstance) {
+        cropperInstance.destroy();
+        cropperInstance = null;
+    }
+
+    const modal = document.getElementById('imageCropModal');
+    if (modal) modal.classList.add('hidden');
+
+    if (cropTargetContext === 'profile') {
+        const settingsModal = document.getElementById('settingsModal');
+        if (settingsModal) settingsModal.classList.remove('hidden');
+    }
+}
+
+function applyCroppedImage() {
+    if (!cropperInstance) return;
+
+    const canvas = cropperInstance.getCroppedCanvas({
+        maxWidth: 1200,
+        maxHeight: 1200,
+        fillColor: '#ffffff',
+        imageSmoothingEnabled: true,
+        imageSmoothingQuality: 'high'
+    });
+
+    if (!canvas) return;
+
+    if (cropTargetContext === 'profile') {
+        _pendingAvatarUrl = canvas.toDataURL('image/jpeg', 0.9);
+        const avatarPreview = document.getElementById('settingsAvatarPreview');
+        if (avatarPreview) {
+            avatarPreview.innerHTML = `<img src="${_pendingAvatarUrl}" alt="Avatar Preview" style="width:100%;height:100%;object-fit:cover;">`;
+        }
+        closeCropModal();
+        const settingsModal = document.getElementById('settingsModal');
+        if (settingsModal) settingsModal.classList.remove('hidden');
+    } else if (cropTargetContext === 'chat_file' || cropTargetContext === 'camera') {
+        canvas.toBlob((blob) => {
+            if (!blob) return;
+            capturedBlob = blob;
+            const croppedFile = new File([blob], `cropped_photo_${Date.now()}.jpg`, { type: 'image/jpeg' });
+            selectedFile = croppedFile;
+
+            if (cropTargetContext === 'camera') {
+                closeCropModal();
+                const cameraModal = document.getElementById('cameraModal');
+                const video = document.getElementById('cameraVideo');
+                const preview = document.getElementById('photoCapturedPreview');
+                const captionWrap = document.getElementById('cameraCaptionWrap');
+                const snapBtn = document.getElementById('snapPhotoBtn');
+                const retakeBtn = document.getElementById('retakePhotoBtn');
+                const sendBtn = document.getElementById('sendPhotoBtn');
+
+                if (video) video.classList.add('hidden');
+                if (preview) {
+                    preview.src = URL.createObjectURL(blob);
+                    preview.classList.remove('hidden');
+                }
+                if (captionWrap) captionWrap.classList.remove('hidden');
+                if (snapBtn) snapBtn.classList.add('hidden');
+                if (retakeBtn) retakeBtn.classList.remove('hidden');
+                if (sendBtn) sendBtn.classList.remove('hidden');
+                if (cameraModal) cameraModal.classList.remove('hidden');
+            } else {
+                const inputEl = document.getElementById('messageTextInput');
+                if (inputEl) {
+                    inputEl.placeholder = `✂️ Cropped Photo ready (${(blob.size / 1024).toFixed(1)} KB) - Press Send`;
+                }
+                closeCropModal();
+            }
+        }, 'image/jpeg', 0.9);
+    }
+}
 
 async function openCameraModal() {
     if (!activeConversationId) {
@@ -1221,6 +1636,7 @@ async function openCameraModal() {
     const captionWrap = document.getElementById('cameraCaptionWrap');
     const captionInput = document.getElementById('cameraCaptionInput');
     const snapBtn = document.getElementById('snapPhotoBtn');
+    const cropBtn = document.getElementById('cropCameraPhotoBtn');
     const retakeBtn = document.getElementById('retakePhotoBtn');
     const sendBtn = document.getElementById('sendPhotoBtn');
     const loadingNotice = document.getElementById('cameraLoadingNotice');
@@ -1233,6 +1649,7 @@ async function openCameraModal() {
     if (preview) preview.classList.add('hidden');
     if (canvas) canvas.classList.add('hidden');
     if (captionWrap) captionWrap.classList.add('hidden');
+    if (cropBtn) cropBtn.classList.add('hidden');
     if (retakeBtn) retakeBtn.classList.add('hidden');
     if (sendBtn) sendBtn.classList.add('hidden');
     if (snapBtn) snapBtn.classList.remove('hidden');
@@ -1260,11 +1677,6 @@ async function openCameraModal() {
 function snapCameraPhoto() {
     const video = document.getElementById('cameraVideo');
     const canvas = document.getElementById('cameraCanvas');
-    const preview = document.getElementById('photoCapturedPreview');
-    const captionWrap = document.getElementById('cameraCaptionWrap');
-    const snapBtn = document.getElementById('snapPhotoBtn');
-    const retakeBtn = document.getElementById('retakePhotoBtn');
-    const sendBtn = document.getElementById('sendPhotoBtn');
 
     if (!video || !canvas) return;
 
@@ -1278,22 +1690,24 @@ function snapCameraPhoto() {
     ctx.drawImage(video, 0, 0, width, height);
 
     const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
-    
-    if (preview) {
-        preview.src = dataUrl;
-        preview.classList.remove('hidden');
+
+    // Stop camera stream & close camera modal
+    if (cameraStream) {
+        cameraStream.getTracks().forEach(track => track.stop());
+        cameraStream = null;
     }
-    
-    if (video) video.classList.add('hidden');
 
-    canvas.toBlob((blob) => {
-        capturedBlob = blob;
-    }, 'image/jpeg', 0.9);
+    const cameraModal = document.getElementById('cameraModal');
+    if (cameraModal) cameraModal.classList.add('hidden');
 
-    if (captionWrap) captionWrap.classList.remove('hidden');
-    if (snapBtn) snapBtn.classList.add('hidden');
-    if (retakeBtn) retakeBtn.classList.remove('hidden');
-    if (sendBtn) sendBtn.classList.remove('hidden');
+    // Open cropper modal straight away!
+    openCropModal(dataUrl, 'camera');
+}
+
+function cropCameraSnappedPhoto() {
+    const preview = document.getElementById('photoCapturedPreview');
+    if (!preview || !preview.src) return;
+    openCropModal(preview.src, 'camera');
 }
 
 function retakeCameraPhoto() {
@@ -1301,6 +1715,7 @@ function retakeCameraPhoto() {
     const preview = document.getElementById('photoCapturedPreview');
     const captionWrap = document.getElementById('cameraCaptionWrap');
     const snapBtn = document.getElementById('snapPhotoBtn');
+    const cropBtn = document.getElementById('cropCameraPhotoBtn');
     const retakeBtn = document.getElementById('retakePhotoBtn');
     const sendBtn = document.getElementById('sendPhotoBtn');
 
@@ -1308,6 +1723,7 @@ function retakeCameraPhoto() {
 
     if (preview) preview.classList.add('hidden');
     if (captionWrap) captionWrap.classList.add('hidden');
+    if (cropBtn) cropBtn.classList.add('hidden');
     if (retakeBtn) retakeBtn.classList.add('hidden');
     if (sendBtn) sendBtn.classList.add('hidden');
     if (snapBtn) snapBtn.classList.remove('hidden');
@@ -1317,7 +1733,7 @@ function retakeCameraPhoto() {
 async function sendCameraPhoto() {
     const sendBtn = document.getElementById('sendPhotoBtn');
 
-    if (!capturedBlob) {
+    if (!capturedBlob && !selectedFile) {
         const canvas = document.getElementById('cameraCanvas');
         if (canvas) {
             await new Promise((resolve) => {
@@ -1329,7 +1745,7 @@ async function sendCameraPhoto() {
         }
     }
 
-    if (!capturedBlob) {
+    if (!capturedBlob && !selectedFile) {
         alert('No photo captured. Please snap a picture first.');
         return;
     }
@@ -1342,9 +1758,10 @@ async function sendCameraPhoto() {
     const captionInput = document.getElementById('cameraCaptionInput');
     const caption = captionInput ? captionInput.value.trim() : '';
 
-    const photoFile = new File([capturedBlob], `photo_${Date.now()}.jpg`, { type: 'image/jpeg' });
+    if (!selectedFile && capturedBlob) {
+        selectedFile = new File([capturedBlob], `photo_${Date.now()}.jpg`, { type: 'image/jpeg' });
+    }
 
-    selectedFile = photoFile;
     const inputField = document.getElementById('messageTextInput');
     if (inputField && caption) {
         inputField.value = caption;
@@ -1376,8 +1793,16 @@ function closeCameraModal(e) {
     if (modal) modal.classList.add('hidden');
 }
 
+window.openCropModal = openCropModal;
+window.rotateCropper = rotateCropper;
+window.zoomCropper = zoomCropper;
+window.resetCropper = resetCropper;
+window.closeCropModal = closeCropModal;
+window.applyCroppedImage = applyCroppedImage;
+
 window.openCameraModal = openCameraModal;
 window.snapCameraPhoto = snapCameraPhoto;
+window.cropCameraSnappedPhoto = cropCameraSnappedPhoto;
 window.retakeCameraPhoto = retakeCameraPhoto;
 window.sendCameraPhoto = sendCameraPhoto;
 window.closeCameraModal = closeCameraModal;

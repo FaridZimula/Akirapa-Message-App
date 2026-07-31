@@ -336,10 +336,15 @@ function buildConversationList(user) {
                     if (participantNames.length > 0) titleName = participantNames.join(' & ');
                 }
 
+                const partnerAvatar = partner ? (partner.avatarUrl || partner.user_metadata?.avatar_url) : null;
+                const convAvatar = conv.avatarUrl || partnerAvatar || null;
+
                 convs.push({
                     id: key,
                     name: titleName || 'Care Pod Chat',
                     role: partner ? partner.role : null,
+                    avatarUrl: convAvatar,
+                    avatar_url: convAvatar,
                     status: conv.status || 'active',
                     isParticipant: !!isParticipant,
                     last_message: lastMessage ? (lastMessage.text || lastMessage.mediaName || 'Shared media') : 'No messages yet',
@@ -385,10 +390,13 @@ function buildConversationList(user) {
                 }
 
                 const existingConvRec = allConversations.find(c => c && c.id === key);
+                const adHocAvatar = partner ? (partner.avatarUrl || partner.user_metadata?.avatar_url) : null;
                 convs.push({
                     id: key,
                     name: titleName,
                     role: partner ? partner.role : null,
+                    avatarUrl: adHocAvatar,
+                    avatar_url: adHocAvatar,
                     status: existingConvRec ? (existingConvRec.status || 'active') : 'active',
                     isParticipant: !!isParticipant,
                     last_message: lastMessage ? (lastMessage.text || lastMessage.mediaName || 'Shared media') : null,
@@ -690,6 +698,25 @@ app.post('/api/auth/logout', verifyAuth, (req, res) => {
     }
     createAuditLog(req.user.id, 'logout', 'Signed out');
     res.json({ success: true });
+});
+
+// User Profile - Update Profile Details
+app.post(['/api/users/profile', '/api/auth/profile'], verifyAuth, (req, res) => {
+    const { name, username, phoneNumber, bio, avatarUrl } = req.body;
+    const userIndex = state.users.findIndex(u => u.id === req.user.id);
+    
+    if (userIndex !== -1) {
+        if (name) state.users[userIndex].name = name;
+        if (username) state.users[userIndex].username = username;
+        if (phoneNumber) state.users[userIndex].phoneNumber = phoneNumber;
+        if (bio !== undefined) state.users[userIndex].bio = bio;
+        if (avatarUrl) state.users[userIndex].avatarUrl = avatarUrl;
+        
+        saveState();
+        return res.json({ success: true, user: sanitizeUser(state.users[userIndex]) });
+    }
+    
+    res.status(404).json({ error: 'User not found' });
 });
 
 // Messages - Get Conversations
