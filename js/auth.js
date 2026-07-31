@@ -2,7 +2,6 @@
 // AKIRAPA AUTH - No Auto-Refresh
 // ============================================================
 
-let currentUser = null;
 let selectedRegRole = 'FAMILY_MEMBER';
 let authInitialized = false;
 

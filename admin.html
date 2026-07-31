@@ -1,12 +1,14 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Akirapa Admin Panel</title>
+    <link rel="icon" type="image/png" href="logo.png">
+    <link rel="apple-touch-icon" href="logo.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
@@ -14,20 +16,21 @@
         .admin-container {
             display: flex;
             height: 100vh;
-            background: var(--bg-primary);
+            background: #ffffff;
         }
         .admin-sidebar {
             width: 240px;
-            background: var(--bg-secondary);
-            border-right: 1px solid var(--border-color);
+            background: #761d90;
+            border-right: 2px solid #42dcd7;
             padding: 20px;
             display: flex;
             flex-direction: column;
+            color: #ffffff;
         }
         .admin-sidebar .logo {
-            font-size: 1.5rem;
+            font-size: 1.35rem;
             font-weight: 700;
-            color: var(--accent-green);
+            color: #ffffff;
             margin-bottom: 30px;
             display: flex;
             align-items: center;
@@ -43,22 +46,24 @@
             padding: 12px 16px;
             border-radius: var(--radius-sm);
             cursor: pointer;
-            color: var(--text-secondary);
+            color: #ffffff;
+            font-weight: 700;
             transition: all 0.2s;
             margin-bottom: 4px;
         }
         .admin-nav-item:hover {
-            background: var(--bg-hover);
-            color: var(--text-primary);
+            background: rgba(66, 220, 215, 0.25);
+            color: #ffffff;
         }
         .admin-nav-item.active {
-            background: var(--bg-tertiary);
-            color: var(--accent-green);
+            background: #ffffff;
+            color: #761d90;
         }
         .admin-content {
             flex: 1;
             padding: 24px;
             overflow-y: auto;
+            background: #ffffff;
         }
         .admin-stats {
             display: grid;
@@ -67,87 +72,99 @@
             margin-bottom: 24px;
         }
         .stat-card {
-            background: var(--bg-secondary);
+            background: #ffffff;
             padding: 20px;
             border-radius: var(--radius-md);
-            border: 1px solid var(--border-color);
+            border: 2px solid #761d90;
+            box-shadow: 0 4px 12px rgba(118, 29, 144, 0.1);
         }
         .stat-card .number {
-            font-size: 2rem;
+            font-size: 2.2rem;
             font-weight: 700;
-            color: var(--text-primary);
+            color: #761d90;
         }
         .stat-card .label {
-            color: var(--text-secondary);
-            font-size: 0.85rem;
+            color: rgba(118, 29, 144, 0.85);
+            font-size: 0.88rem;
+            font-weight: 700;
         }
         .conversation-view {
-            background: var(--bg-secondary);
+            background: #ffffff;
             border-radius: var(--radius-md);
             padding: 16px;
             margin-bottom: 16px;
+            border: 1.5px solid #761d90;
+            box-shadow: 0 4px 10px rgba(118, 29, 144, 0.08);
         }
         .conversation-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding-bottom: 12px;
-            border-bottom: 1px solid var(--border-color);
+            border-bottom: 1px solid rgba(118, 29, 144, 0.2);
+            color: #761d90;
         }
         .participant-tag {
             display: inline-block;
-            padding: 2px 10px;
+            padding: 3px 10px;
             border-radius: var(--radius-full);
             font-size: 0.75rem;
-            background: var(--bg-tertiary);
+            background: rgba(118, 29, 144, 0.1);
             margin-right: 4px;
+            font-weight: 700;
         }
         .role-badge.admin-view {
-            background: rgba(245, 158, 11, 0.15);
-            color: #f59e0b;
-            border: 1px solid rgba(245, 158, 11, 0.3);
+            background: #761d90;
+            color: #ffffff;
+            border: 1px solid #42dcd7;
         }
         .message-preview {
             margin-top: 8px;
-            padding: 8px;
-            background: var(--bg-tertiary);
+            padding: 10px;
+            background: rgba(118, 29, 144, 0.05);
             border-radius: var(--radius-sm);
+            color: #761d90;
+            font-weight: 600;
         }
         .user-item {
             display: flex;
             justify-content: space-between;
             align-items: center;
             padding: 12px 16px;
-            border-bottom: 1px solid var(--border-color);
+            border-bottom: 1px solid rgba(118, 29, 144, 0.2);
         }
         .user-item:hover {
-            background: var(--bg-hover);
+            background: rgba(66, 220, 215, 0.15);
         }
         .log-item {
             padding: 12px 16px;
-            border-bottom: 1px solid var(--border-color);
-            font-size: 0.9rem;
+            border-bottom: 1px solid rgba(118, 29, 144, 0.2);
+            font-size: 0.92rem;
+            color: #761d90;
+            font-weight: 600;
         }
         .log-item .action {
-            font-weight: 600;
-            color: var(--accent-green);
+            font-weight: 700;
+            color: #761d90;
         }
         .log-item .time {
-            color: var(--text-muted);
+            color: rgba(118, 29, 144, 0.65);
             font-size: 0.8rem;
         }
         .online-indicator {
             display: inline-block;
-            width: 8px;
-            height: 8px;
+            width: 10px;
+            height: 10px;
             border-radius: 50%;
             margin-left: 6px;
         }
         .online-indicator.online {
-            background: #00a884;
+            background: #42dcd7;
+            box-shadow: 0 0 6px #42dcd7;
         }
         .online-indicator.offline {
-            background: var(--text-muted);
+            background: #761d90;
+            opacity: 0.4;
         }
     </style>
 </head>
@@ -157,7 +174,7 @@
     <div class="auth-card">
         <div class="auth-brand">
             <div class="auth-brand-logo">
-                <i class="fa-solid fa-shield-halved"></i>
+                <img src="logo.png" alt="Akirapa Admin Logo" class="auth-brand-logo-img">
             </div>
             <h1 class="auth-title">Admin Access</h1>
             <p class="auth-subtitle">Secure Admin Panel</p>
@@ -184,7 +201,7 @@
 <div id="adminApp" class="admin-container hidden">
     <aside class="admin-sidebar">
         <div class="logo">
-            <i class="fa-solid fa-shield-halved"></i>
+            <img src="logo.png" alt="Akirapa Logo" style="height: 36px; width: 36px; object-fit: contain; background: #ffffff; border-radius: 8px; padding: 2px; border: 1.5px solid #42dcd7;">
             Akirapa Admin
         </div>
         <nav class="admin-nav">
@@ -210,7 +227,7 @@
 
     <main class="admin-content" id="adminContent">
         <div id="view-dashboard">
-            <h2>Dashboard</h2>
+            <h2 style="color: #761d90; font-weight: 700; margin-bottom: 16px;">Dashboard</h2>
             <div class="admin-stats" id="dashboardStats">
                 <div class="stat-card">
                     <div class="number" id="statUsers">0</div>
@@ -232,17 +249,17 @@
         </div>
 
         <div id="view-conversations" class="hidden">
-            <h2>All Conversations</h2>
+            <h2 style="color: #761d90; font-weight: 700; margin-bottom: 16px;">All Conversations</h2>
             <div id="conversationsList"></div>
         </div>
 
         <div id="view-users" class="hidden">
-            <h2>Users</h2>
+            <h2 style="color: #761d90; font-weight: 700; margin-bottom: 16px;">Users</h2>
             <div id="usersList"></div>
         </div>
 
         <div id="view-audit" class="hidden">
-            <h2>Audit Logs</h2>
+            <h2 style="color: #761d90; font-weight: 700; margin-bottom: 16px;">Audit Logs</h2>
             <div id="auditLogsList"></div>
         </div>
     </main>
@@ -371,17 +388,17 @@ async function loadUsers() {
         const data = await response.json();
         const container = document.getElementById('usersList');
         if (!data.users || data.users.length === 0) {
-            container.innerHTML = '<p style="color: var(--text-secondary);">No users found.</p>';
+            container.innerHTML = '<p style="color: #761d90; font-weight: 600;">No users found.</p>';
             return;
         }
         container.innerHTML = data.users.map(user => `
             <div class="user-item" data-user-id="${user.id}">
                 <div>
-                    <strong>${user.name}</strong>
+                    <strong style="color: #761d90;">${user.name}</strong>
                     <span class="role-badge ${user.role}">${user.role}</span>
                     <span class="online-indicator ${user.online_status ? 'online' : 'offline'}"></span>
                 </div>
-                <span style="font-size: 0.8rem; color: var(--text-secondary);">
+                <span style="font-size: 0.85rem; color: #761d90; font-weight: 600;">
                     ${user.email || 'No email'}
                 </span>
             </div>
@@ -400,7 +417,7 @@ async function loadConversationsAdmin() {
         const data = await response.json();
         const container = document.getElementById('conversationsList');
         if (!data.conversations || data.conversations.length === 0) {
-            container.innerHTML = '<p style="color: var(--text-secondary);">No conversations found.</p>';
+            container.innerHTML = '<p style="color: #761d90; font-weight: 600;">No conversations found.</p>';
             return;
         }
         container.innerHTML = data.conversations.map(conv => `
@@ -410,7 +427,7 @@ async function loadConversationsAdmin() {
                         <strong>${conv.name}</strong>
                         ${conv.participants?.map(p => `<span class="participant-tag role-badge ${p.role}">${p.name} (${p.role})</span>`).join('')}
                     </div>
-                    <span style="font-size: 0.8rem; color: var(--text-secondary);">
+                    <span style="font-size: 0.85rem; color: #761d90; font-weight: 600;">
                         ${new Date(conv.last_message_time || conv.created_at).toLocaleString()}
                     </span>
                 </div>
@@ -433,7 +450,7 @@ async function loadAuditLogs() {
         const data = await response.json();
         const container = document.getElementById('auditLogsList');
         if (!data.logs || data.logs.length === 0) {
-            container.innerHTML = '<p style="color: var(--text-secondary);">No audit logs found.</p>';
+            container.innerHTML = '<p style="color: #761d90; font-weight: 600;">No audit logs found.</p>';
             return;
         }
         container.innerHTML = data.logs.map(log => `
@@ -443,7 +460,7 @@ async function loadAuditLogs() {
                     by ${log.admin?.name || 'Unknown'}
                     <span class="time">${new Date(log.created_at).toLocaleString()}</span>
                 </div>
-                ${log.details ? `<div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 4px;">${JSON.stringify(log.details)}</div>` : ''}
+                ${log.details ? `<div style="font-size: 0.8rem; color: #761d90; margin-top: 4px;">${JSON.stringify(log.details)}</div>` : ''}
             </div>
         `).join('');
     } catch (err) {

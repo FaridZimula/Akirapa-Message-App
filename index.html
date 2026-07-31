@@ -1,12 +1,14 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Akirapa Care Messaging - Real-time Chat App</title>
+  <link rel="icon" type="image/png" href="logo.png">
+  <link rel="apple-touch-icon" href="logo.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
   <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
@@ -18,11 +20,11 @@
     <div class="auth-card">
       <div class="auth-brand">
         <div class="auth-brand-logo">
-          <i class="fa-brands fa-whatsapp"></i>
+          <img src="logo.png" alt="Akirapa Connect Logo" class="auth-brand-logo-img">
         </div>
         <h1 class="auth-title">Akirapa Connect</h1>
         <p class="auth-subtitle">Secure Care Pod Messaging & Audio Hub</p>
-        <p style="font-size: 0.7rem; color: var(--text-muted); margin-top: 4px;">
+        <p style="font-size: 0.75rem; color: #761d90; margin-top: 6px; font-weight: 700;">
           <i class="fa-solid fa-lock"></i> End-to-End Encrypted • Real-time
         </p>
       </div>
@@ -35,12 +37,7 @@
       <!-- LOGIN FORM -->
       <form id="loginForm" onsubmit="handleLogin(event)">
         <button type="button" class="btn-google" onclick="handleGoogleAuth()">
-          <svg width="18" height="18" viewBox="0 0 24 24" style="margin-right: 10px;">
-            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
-            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
-          </svg>
+          <img src="logo.png" alt="Logo Icon" style="width: 20px; height: 20px; margin-right: 10px; object-fit: contain;">
           Continue with Google
         </button>
 
@@ -63,8 +60,8 @@
         </div>
         
         <div class="form-group" style="display: flex; align-items: center; gap: 10px;">
-          <input type="checkbox" id="rememberMe" checked style="width: 18px; height: 18px; cursor: pointer;">
-          <label for="rememberMe" style="font-size: 0.9rem; color: var(--text-secondary); cursor: pointer;">
+          <input type="checkbox" id="rememberMe" checked style="width: 18px; height: 18px; cursor: pointer; accent-color: #761d90;">
+          <label for="rememberMe" style="font-size: 0.9rem; color: #761d90; font-weight: 700; cursor: pointer;">
             <i class="fa-regular fa-circle-check"></i> Remember me on this device
           </label>
         </div>
@@ -73,7 +70,7 @@
           <i class="fa-solid fa-right-to-bracket"></i> Sign In to Chat
         </button>
         
-        <div style="margin-top: 12px; text-align: center; font-size: 0.75rem; color: var(--text-muted);">
+        <div style="margin-top: 12px; text-align: center; font-size: 0.8rem; color: #761d90; font-weight: 600;">
           <i class="fa-solid fa-shield-halved"></i> Session will persist until you sign out
         </div>
       </form>
@@ -81,12 +78,7 @@
       <!-- REGISTER FORM -->
       <form id="registerForm" class="hidden" onsubmit="handleRegister(event)">
         <button type="button" class="btn-google" onclick="handleGoogleAuth()">
-          <svg width="18" height="18" viewBox="0 0 24 24" style="margin-right: 10px;">
-            <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-            <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-            <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
-            <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
-          </svg>
+          <img src="logo.png" alt="Logo Icon" style="width: 20px; height: 20px; margin-right: 10px; object-fit: contain;">
           Sign Up with Google
         </button>
 
@@ -97,11 +89,11 @@
           <label class="form-label">Choose Account Role</label>
           <div class="role-selector">
             <div class="role-option selected" id="roleOptCaregiver" onclick="selectRegisterRole('CAREGIVER')">
-              <i class="fa-regular fa-heart" style="font-size: 1.2rem; color: var(--role-caregiver);"></i>
+              <i class="fa-regular fa-heart" style="font-size: 1.2rem; color: #761d90;"></i>
               <div class="role-option-title">Caregiver</div>
             </div>
             <div class="role-option" id="roleOptFamily" onclick="selectRegisterRole('FAMILY_MEMBER')">
-              <i class="fa-regular fa-user" style="font-size: 1.2rem; color: var(--role-family);"></i>
+              <i class="fa-regular fa-user" style="font-size: 1.2rem; color: #42dcd7;"></i>
               <div class="role-option-title">Client / Family</div>
             </div>
           </div>
@@ -121,7 +113,7 @@
           <label class="form-label" for="regEmail">Email Address</label>
           <div style="display: flex; gap: 8px;">
             <input type="email" id="regEmail" class="form-input" placeholder="e.g. sarah@example.com" autocomplete="email" required>
-            <button type="button" id="sendOtpBtn" onclick="handleSendOtp()" style="white-space: nowrap; padding: 10px 14px; background: var(--bg-tertiary); border: 1px solid var(--border-color); color: var(--accent-green); border-radius: var(--radius-md); cursor: pointer; font-weight: 700; font-size: 0.85rem;">
+            <button type="button" id="sendOtpBtn" onclick="handleSendOtp()" style="white-space: nowrap; padding: 10px 14px; background: #761d90; border: 1.5px solid #42dcd7; color: #ffffff; border-radius: var(--radius-md); cursor: pointer; font-weight: 700; font-size: 0.85rem;">
               <i class="fa-solid fa-paper-plane"></i> Send OTP
             </button>
           </div>
@@ -162,16 +154,14 @@
     <aside id="sidebar" class="sidebar">
       <header class="sidebar-header">
         <div class="user-profile-summary">
+          <img src="logo.png" alt="Akirapa Brand Logo" style="width: 38px; height: 38px; object-fit: contain; background: #ffffff; border-radius: 8px; padding: 2px; border: 1.5px solid #42dcd7;">
           <div class="avatar" id="currentUserAvatar">A</div>
           <div>
-            <div id="currentUserName" style="font-weight: 600; font-size: 0.95rem;">User Name</div>
+            <div id="currentUserName" style="font-weight: 700; font-size: 0.95rem; color: #ffffff;">User Name</div>
             <div id="currentUserBadge" class="role-badge CAREGIVER">CAREGIVER</div>
           </div>
         </div>
         <div class="header-actions">
-          <button class="icon-btn" title="Toggle Theme" onclick="toggleTheme()">
-            <i class="fa-regular fa-moon" id="themeIcon"></i>
-          </button>
           <button class="icon-btn" title="Sign Out" onclick="handleLogout()">
             <i class="fa-solid fa-right-from-bracket"></i>
           </button>
@@ -180,7 +170,7 @@
 
       <div class="sidebar-search">
         <div class="search-input-wrap">
-          <i class="fa-solid fa-magnifying-glass" style="color: var(--text-secondary);"></i>
+          <i class="fa-solid fa-magnifying-glass" style="color: #761d90;"></i>
           <input type="text" id="searchInput" placeholder="Search conversations..." oninput="filterConversations()">
         </div>
       </div>
@@ -199,7 +189,7 @@
             <i class="fa-solid fa-arrow-left"></i>
           </button>
           <div class="avatar" id="activeChatAvatar">
-            <i class="fa-solid fa-users"></i>
+            <img src="logo.png" alt="Logo" style="width: 100%; height: 100%; object-fit: contain; padding: 4px;">
           </div>
           <div>
             <div class="chat-title" id="activeChatTitle">Select a Conversation</div>
@@ -225,14 +215,14 @@
             </button>
             <div id="chatMenuDropdown" class="chat-menu-dropdown hidden">
               <button class="menu-item" onclick="closeCurrentChatRoom()">
-                <i class="fa-solid fa-folder-closed" style="color: #60a5fa;"></i> Close Active Chat (Pause Receipts)
+                <i class="fa-solid fa-folder-closed" style="color: #42dcd7;"></i> Close Active Chat (Pause Receipts)
               </button>
               <button class="menu-item" id="terminateMenuBtn" onclick="terminateCurrentChatRoom()">
-                <i class="fa-solid fa-ban" style="color: #ef4444;"></i> Terminate Chat Room (Permanent)
+                <i class="fa-solid fa-ban" style="color: #761d90;"></i> Terminate Chat Room (Permanent)
               </button>
               <div class="menu-divider"></div>
               <button class="menu-item" onclick="openSettingsModal()">
-                <i class="fa-solid fa-gear" style="color: var(--accent-green);"></i> Account & Pod Settings
+                <i class="fa-solid fa-gear" style="color: #761d90;"></i> Account & Pod Settings
               </button>
             </div>
           </div>
@@ -242,7 +232,7 @@
       <!-- CHAT BODY -->
       <div class="chat-body" id="chatBody">
         <div class="encryption-banner">
-          <i class="fa-solid fa-lock"></i>
+          <img src="logo.png" alt="Logo" style="width: 18px; height: 18px; object-fit: contain;">
           Messages and media are encrypted end-to-end. Only authorized participants can view them.
         </div>
         <div id="messagesList">
@@ -257,26 +247,30 @@
         <!-- REPLY PREVIEW BAR -->
         <div id="replyPreviewBar" class="reply-preview-bar hidden">
           <div class="reply-preview-content">
-            <i class="fa-solid fa-reply" style="color: var(--accent-green);"></i>
+            <i class="fa-solid fa-reply" style="color: #761d90;"></i>
             <div>
               <div class="reply-sender" id="replyPreviewSender">Replying to User</div>
               <div class="reply-text" id="replyPreviewText">Message snippet...</div>
             </div>
           </div>
           <button type="button" class="icon-btn" onclick="cancelReply()" title="Cancel Reply">
-            <i class="fa-solid fa-xmark"></i>
+            <i class="fa-solid fa-xmark" style="color: #761d90;"></i>
           </button>
         </div>
         
         <div id="standardInputBar" class="flex items-center gap-2" style="width: 100%;">
-          <button class="icon-btn" title="Attach Photo or Video" onclick="triggerFileInput()">
+          <button class="icon-btn" title="Attach Photo or Video" onclick="triggerFileInput()" style="color: #761d90;">
             <i class="fa-solid fa-paperclip" style="font-size: 1.3rem;"></i>
           </button>
           <input type="file" id="mediaFileInput" accept="image/*,video/*,audio/*" class="hidden" onchange="handleFileSelected(event)">
 
           <textarea id="messageTextInput" class="chat-input-field" placeholder="Type a message..." rows="1" onkeydown="handleInputKeyDown(event)"></textarea>
 
-          <button id="micBtn" class="icon-btn" title="Record Voice Note" onclick="startAudioRecording()" style="color: var(--accent-green);">
+          <button id="cameraBtn" class="icon-btn" title="Take Photo with Camera" onclick="openCameraModal()" style="color: #761d90;">
+            <i class="fa-solid fa-camera" style="font-size: 1.3rem;"></i>
+          </button>
+
+          <button id="micBtn" class="icon-btn" title="Record Voice Note" onclick="startAudioRecording()" style="color: #761d90;">
             <i class="fa-solid fa-microphone" style="font-size: 1.3rem;"></i>
           </button>
 
@@ -288,11 +282,11 @@
         <div id="recordingBar" class="recording-bar hidden">
           <div class="flex items-center gap-3">
             <div class="recording-pulse"></div>
-            <span style="font-weight: 600; font-size: 0.9rem;" id="recordingTimer">00:00</span>
-            <span style="font-size: 0.85rem; opacity: 0.8;">Recording voice note...</span>
+            <span style="font-weight: 700; font-size: 0.95rem;" id="recordingTimer">00:00</span>
+            <span style="font-size: 0.88rem; font-weight: 600;">Recording voice note...</span>
           </div>
           <div class="flex items-center gap-2">
-            <button class="icon-btn" title="Cancel Recording" onclick="cancelAudioRecording()" style="color: #ef4444;">
+            <button class="icon-btn" title="Cancel Recording" onclick="cancelAudioRecording()" style="color: #761d90;">
               <i class="fa-regular fa-trash-can"></i>
             </button>
             <button class="btn-send" title="Send Voice Note" onclick="stopAndSendAudioRecording()">
@@ -304,6 +298,48 @@
       </footer>
     </main>
 
+  </div>
+
+  <!-- ==================== CAMERA CAPTURE MODAL ==================== -->
+  <div id="cameraModal" class="modal-overlay hidden" onclick="closeCameraModal(event)">
+    <div class="modal-content camera-modal-content" onclick="event.stopPropagation()" style="max-width: 480px; width: 92%; padding: 24px; text-align: center;">
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+        <h3 style="margin: 0; font-size: 1.15rem; color: #761d90; font-weight: 700; display: flex; align-items: center; gap: 8px;">
+          <i class="fa-solid fa-camera" style="color: #42dcd7;"></i> Take Photo
+        </h3>
+        <button class="icon-btn" onclick="closeCameraModal()" style="color: #761d90;"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <!-- Camera View & Preview Container -->
+      <div id="cameraViewContainer" style="position: relative; width: 100%; border-radius: var(--radius-md); overflow: hidden; background: #761d90; min-height: 260px; display: flex; align-items: center; justify-content: center; border: 2px solid #761d90;">
+        <video id="cameraVideo" autoplay playsinline style="width: 100%; height: 260px; object-fit: cover;"></video>
+        <canvas id="cameraCanvas" class="hidden"></canvas>
+        <img id="photoCapturedPreview" class="hidden" style="width: 100%; height: 260px; object-fit: cover; border-radius: var(--radius-md);" />
+        <div id="cameraLoadingNotice" class="hidden" style="color: #ffffff; font-weight: 700; font-size: 0.9rem;">
+          <i class="fa-solid fa-spinner fa-spin"></i> Initializing Camera...
+        </div>
+      </div>
+
+      <!-- Caption Input -->
+      <div id="cameraCaptionWrap" class="hidden" style="margin-top: 14px;">
+        <input type="text" id="cameraCaptionInput" class="form-input" placeholder="Add a caption to your photo..." style="font-size: 0.95rem;">
+      </div>
+
+      <!-- Modal Actions -->
+      <div style="display: flex; justify-content: center; gap: 12px; margin-top: 18px;">
+        <button id="snapPhotoBtn" type="button" class="btn-primary" onclick="snapCameraPhoto()" style="width: auto; padding: 10px 24px;">
+          <i class="fa-solid fa-circle-dot"></i> Take Picture
+        </button>
+        
+        <button id="retakePhotoBtn" type="button" class="btn-secondary hidden" onclick="retakeCameraPhoto()" style="padding: 10px 18px; background: transparent; border: 1.5px solid #761d90; border-radius: var(--radius-md); color: #761d90; cursor: pointer; font-weight: 700;">
+          <i class="fa-solid fa-rotate-left"></i> Retake
+        </button>
+
+        <button id="sendPhotoBtn" type="button" class="btn-primary hidden" onclick="sendCameraPhoto()" style="width: auto; padding: 10px 24px;">
+          <i class="fa-solid fa-paper-plane"></i> Send Photo
+        </button>
+      </div>
+    </div>
   </div>
 
   <!-- ==================== MEDIA MODAL ==================== -->
@@ -320,10 +356,10 @@
   <div id="forwardModal" class="modal-overlay hidden" onclick="closeForwardModal(event)">
     <div class="modal-content" onclick="event.stopPropagation()" style="max-width: 420px; width: 90%; padding: 20px;">
       <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
-        <h3 style="margin: 0; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; color: var(--text-primary);">
-          <i class="fa-solid fa-share" style="color: var(--accent-green);"></i> Forward Message
+        <h3 style="margin: 0; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; color: #761d90; font-weight: 700;">
+          <i class="fa-solid fa-share" style="color: #42dcd7;"></i> Forward Message
         </h3>
-        <button class="icon-btn" onclick="closeForwardModal()"><i class="fa-solid fa-xmark"></i></button>
+        <button class="icon-btn" onclick="closeForwardModal()" style="color: #761d90;"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <div id="forwardConversationsList" style="max-height: 300px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px;"></div>
     </div>
@@ -332,17 +368,17 @@
   <!-- ==================== ROLE-BASED SETTINGS MODAL ==================== -->
   <div id="settingsModal" class="modal-overlay hidden" onclick="closeSettingsModal(event)">
     <div class="modal-content" onclick="event.stopPropagation()" style="max-width: 520px; width: 92%; padding: 24px;">
-      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; border-bottom: 1px solid var(--border-color); padding-bottom: 12px;">
-        <h3 style="margin: 0; font-size: 1.15rem; display: flex; align-items: center; gap: 8px; color: var(--text-primary);">
-          <i class="fa-solid fa-sliders" style="color: var(--accent-green);"></i> <span id="settingsTitle">Pod Settings</span>
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; border-bottom: 1.5px solid rgba(118, 29, 144, 0.2); padding-bottom: 12px;">
+        <h3 style="margin: 0; font-size: 1.15rem; display: flex; align-items: center; gap: 8px; color: #761d90; font-weight: 700;">
+          <i class="fa-solid fa-sliders" style="color: #42dcd7;"></i> <span id="settingsTitle">Pod Settings</span>
         </h3>
-        <button class="icon-btn" onclick="closeSettingsModal()"><i class="fa-solid fa-xmark"></i></button>
+        <button class="icon-btn" onclick="closeSettingsModal()" style="color: #761d90;"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <div id="settingsContent" style="display: flex; flex-direction: column; gap: 14px;">
         <!-- Dynamic role settings content injected here -->
       </div>
-      <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; border-top: 1px solid var(--border-color); padding-top: 12px;">
-        <button type="button" class="btn-secondary" onclick="closeSettingsModal()" style="padding: 8px 16px; background: transparent; border: 1px solid var(--border-color); border-radius: var(--radius-md); color: var(--text-secondary); cursor: pointer;">Cancel</button>
+      <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; border-top: 1.5px solid rgba(118, 29, 144, 0.2); padding-top: 12px;">
+        <button type="button" class="btn-secondary" onclick="closeSettingsModal()" style="padding: 8px 16px; background: transparent; border: 1.5px solid #761d90; border-radius: var(--radius-md); color: #761d90; cursor: pointer; font-weight: 700;">Cancel</button>
         <button type="button" class="btn-primary" onclick="saveRoleSettings()" style="width: auto; padding: 8px 20px;">Save Settings</button>
       </div>
     </div>

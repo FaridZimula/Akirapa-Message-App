@@ -156,6 +156,19 @@
         "role": "FAMILY_MEMBER",
         "createdAt": "2026-01-02T10:30:00.000Z"
       }
+    },
+    "sess_1785510059203_ab181c60bbd1b": {
+      "userId": "user_5",
+      "user": {
+        "id": "user_5",
+        "name": "Farid Zimula",
+        "username": "farid",
+        "email": "farid@akirapa.com",
+        "password": "123456",
+        "phoneNumber": "+1 604 555 0105",
+        "role": "FAMILY_MEMBER",
+        "createdAt": "2026-01-02T10:30:00.000Z"
+      }
     }
   },
   "messages": [
@@ -284,9 +297,30 @@
       "mediaType": "image",
       "mediaName": "post.jpg",
       "isRead": true
+    },
+    {
+      "id": 10,
+      "conversationId": "conv_user_1785267173645_user_5",
+      "senderId": "user_5",
+      "senderName": "Farid Zimula",
+      "senderRole": "FAMILY_MEMBER",
+      "recipientId": "user",
+      "text": "She ate Prestige in the Morning",
+      "createdAt": "2026-07-31T15:11:04.667Z",
+      "mediaUrl": "/uploads/1785510664664-ahoap.jpg",
+      "mediaType": "image",
+      "mediaName": "photo_1785510664647.jpg",
+      "isRead": false
     }
   ],
   "auditLogs": [
+    {
+      "id": 1785510059204,
+      "actorId": "user_5",
+      "action": "login",
+      "detail": "Signed in farid",
+      "createdAt": "2026-07-31T15:00:59.204Z"
+    },
     {
       "id": 1785294377392,
       "actorId": "user_5",
@@ -519,5 +553,5 @@
       "createdAt": "2026-07-29T01:57:40.556Z"
     }
   ],
-  "messageId": 10
+  "messageId": 11
 }

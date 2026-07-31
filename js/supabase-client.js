@@ -1,11 +1,25 @@
 // ============================================================
-// SUPABASE AUTH CLIENT
+// SUPABASE & EXPRESS AUTH CLIENT (Dual-Mode Support)
 // ============================================================
 
 let currentUser = null;
 let currentSession = null;
 
 async function initSupabase() {
+  const token = localStorage.getItem('akirapa_session_token');
+  const savedUser = localStorage.getItem('akirapa_user');
+  
+  if (token && savedUser) {
+    try {
+      const parsedUser = JSON.parse(savedUser);
+      currentUser = parsedUser;
+      currentSession = { access_token: token };
+      return currentSession;
+    } catch (e) {
+      console.warn('Session parse error:', e);
+    }
+  }
+
   const client = getSupabase();
   if (!client) return null;
 
@@ -15,6 +29,10 @@ async function initSupabase() {
       currentSession = session;
       const { data: { user } } = await client.auth.getUser();
       currentUser = user;
+      if (user) {
+        localStorage.setItem('akirapa_session_token', session.access_token);
+        localStorage.setItem('akirapa_user', JSON.stringify(user));
+      }
       return session;
     }
     return null;
@@ -25,8 +43,40 @@ async function initSupabase() {
 }
 
 async function signUpWithSupabase(email, password, userData) {
+  // 1. Try Local Express Server API first
+  try {
+    const res = await fetch('/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email,
+        password,
+        name: userData.name,
+        username: userData.username,
+        phoneNumber: userData.phoneNumber,
+        role: userData.role,
+        code: userData.code
+      })
+    });
+    const data = await res.json();
+    if (res.ok && data.session) {
+      currentSession = data.session;
+      currentUser = data.user;
+      localStorage.setItem('akirapa_session_token', data.session.access_token);
+      localStorage.setItem('akirapa_user', JSON.stringify(data.user));
+      return { user: currentUser, session: currentSession };
+    } else if (data && data.error) {
+      throw new Error(data.error);
+    }
+  } catch (e) {
+    if (e.message && !e.message.toLowerCase().includes('failed to fetch') && !e.message.toLowerCase().includes('networkerror')) {
+      throw e;
+    }
+  }
+
+  // 2. Fallback to Supabase remote project
   const client = getSupabase();
-  if (!client) throw new Error('Supabase not initialized');
+  if (!client) throw new Error('Registration service unavailable');
 
   const { data, error } = await client.auth.signUp({
     email,
@@ -43,37 +93,80 @@ async function signUpWithSupabase(email, password, userData) {
 
   if (error) throw new Error(error.message);
   
-  // Wait for profile to be created (trigger handles this)
-  await new Promise(r => setTimeout(r, 1000));
-  
   currentSession = data.session;
   currentUser = data.user;
+  if (currentUser) {
+    localStorage.setItem('akirapa_session_token', data.session?.access_token || 'mock_token');
+    localStorage.setItem('akirapa_user', JSON.stringify(currentUser));
+  }
   return { user: currentUser, session: currentSession };
 }
 
 async function signInWithSupabase(email, password) {
+  const identifier = email.trim();
+
+  // 1. Try Local Express Server API first (handles seed accounts & local DB)
+  try {
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: identifier, username: identifier, password })
+    });
+    const data = await res.json();
+    if (res.ok && data.session) {
+      currentSession = data.session;
+      currentUser = data.user;
+      localStorage.setItem('akirapa_session_token', data.session.access_token);
+      localStorage.setItem('akirapa_user', JSON.stringify(data.user));
+      return { user: currentUser, session: currentSession };
+    }
+  } catch (e) {
+    console.warn('Local auth login error, checking Supabase:', e);
+  }
+
+  // 2. Fallback to Supabase remote project
   const client = getSupabase();
-  if (!client) throw new Error('Supabase not initialized');
+  if (client) {
+    try {
+      const { data, error } = await client.auth.signInWithPassword({
+        email: identifier,
+        password
+      });
+      if (!error && data.session) {
+        currentSession = data.session;
+        currentUser = data.user;
+        localStorage.setItem('akirapa_session_token', data.session.access_token);
+        localStorage.setItem('akirapa_user', JSON.stringify(data.user));
+        return { user: currentUser, session: currentSession };
+      }
+    } catch (e) {
+      console.warn('Supabase remote login error:', e);
+    }
+  }
 
-  const { data, error } = await client.auth.signInWithPassword({
-    email,
-    password
-  });
-
-  if (error) throw new Error(error.message);
-
-  currentSession = data.session;
-  currentUser = data.user;
-  return { user: currentUser, session: currentSession };
+  throw new Error('Invalid username/email or password');
 }
 
 async function signOutWithSupabase() {
-  const client = getSupabase();
-  if (!client) return;
+  const token = localStorage.getItem('akirapa_session_token');
+  if (token) {
+    try {
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+    } catch (e) {}
+  }
 
-  await client.auth.signOut();
+  const client = getSupabase();
+  if (client) {
+    try { await client.auth.signOut(); } catch (e) {}
+  }
+
   currentUser = null;
   currentSession = null;
+  localStorage.removeItem('akirapa_session_token');
+  localStorage.removeItem('akirapa_user');
   localStorage.removeItem('supabase_session');
 }
 
@@ -86,22 +179,44 @@ function getCurrentSession() {
 }
 
 async function signInWithGoogle(email, name, role) {
-  // For Google auth, we'll use Supabase's built-in OAuth
   const client = getSupabase();
-  if (!client) throw new Error('Supabase not initialized');
+  if (client) {
+    try {
+      const { data, error } = await client.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin
+        }
+      });
+      if (!error && data?.url) {
+        return { url: data.url };
+      }
+    } catch (e) {}
+  }
 
-  const { data, error } = await client.auth.signInWithOAuth({
-    provider: 'google',
-    options: {
-      redirectTo: window.location.origin
+  // Fallback for dev environment Google sign-in
+  const targetEmail = email || 'google.user@gmail.com';
+  const targetName = name || 'Google User';
+
+  try {
+    const res = await fetch('/api/auth/google', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email: targetEmail, name: targetName, role: role || 'FAMILY_MEMBER' })
+    });
+    const data = await res.json();
+    if (res.ok && data.session) {
+      currentSession = data.session;
+      currentUser = data.user;
+      localStorage.setItem('akirapa_session_token', data.session.access_token);
+      localStorage.setItem('akirapa_user', JSON.stringify(data.user));
+      return { user: currentUser, session: currentSession };
     }
-  });
+  } catch (e) {
+    console.error('Google dev auth error:', e);
+  }
 
-  if (error) throw new Error(error.message);
-  
-  // The user will be redirected to Google
-  // After redirect, the session will be available
-  return { url: data.url };
+  throw new Error('Google authentication failed');
 }
 
 // Attach to window

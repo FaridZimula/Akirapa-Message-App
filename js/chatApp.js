@@ -408,19 +408,19 @@ async function loadConversations() {
 function renderThreadItem(conv, isMonitored = false) {
     const isActive = conv.id === activeConversationId ? 'active' : '';
     const initial = (conv.name || 'C').charAt(0).toUpperCase();
-    const onlineStatus = conv.online_status ? '<span style="color: #00a884; font-size: 0.6rem;">●</span>' : '';
+    const onlineStatus = conv.online_status ? '<span style="color: #42dcd7; font-size: 0.6rem;">●</span>' : '';
     const roleBadge = conv.role ? `<span class="role-badge ${conv.role}" style="font-size: 0.6rem;">${conv.role.replace('_', ' ')}</span>` : '';
     const participantCount = conv.participants && conv.participants.length > 0 ? 
-        `<span style="font-size: 0.6rem; color: var(--text-muted);">${conv.participants.length} participants</span>` : '';
+        `<span style="font-size: 0.65rem; color: #ffffff; font-weight: 600;">${conv.participants.length} participants</span>` : '';
     
     let statusTag = '';
     if (conv.status === 'paused') {
-        statusTag = `<span class="role-badge" style="font-size: 0.58rem; background: rgba(245,158,11,0.2); color: #fbbf24; border: 1px solid rgba(245,158,11,0.4); margin-left: 4px;">⏸️ PAUSED</span>`;
+        statusTag = `<span class="role-badge" style="font-size: 0.58rem; background: #761d90; color: #ffffff; border: 1px solid #42dcd7; margin-left: 4px;">⏸️ PAUSED</span>`;
     } else if (conv.status === 'ended') {
-        statusTag = `<span class="role-badge" style="font-size: 0.58rem; background: rgba(239,68,68,0.2); color: #f87171; border: 1px solid rgba(239,68,68,0.4); margin-left: 4px;">🚫 ENDED</span>`;
+        statusTag = `<span class="role-badge" style="font-size: 0.58rem; background: #761d90; color: #ffffff; border: 1px solid #42dcd7; margin-left: 4px;">🚫 ENDED</span>`;
     }
 
-    const monitoredBadge = isMonitored ? `<span style="font-size: 0.6rem; color: #fbbf24; background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.3); padding: 1px 6px; border-radius: 4px; font-weight: 700;">👁️ OBSERVE</span>` : '';
+    const monitoredBadge = isMonitored ? `<span style="font-size: 0.6rem; color: #761d90; background: #ffffff; border: 1px solid #761d90; padding: 1px 6px; border-radius: 4px; font-weight: 700;">👁️ OBSERVE</span>` : '';
 
     return `
         <div class="thread-item ${isActive}" onclick="selectConversation('${conv.id}', '${escapeJs(conv.name)}')">
@@ -479,25 +479,25 @@ function renderConversations(list) {
 
         // Direct Chats Section
         html += `
-            <div class="sidebar-section-header" style="padding: 10px 16px 6px; font-size: 0.72rem; font-weight: 800; color: #a78bfa; letter-spacing: 0.5px; text-transform: uppercase; display: flex; align-items: center; justify-content: space-between;">
+            <div class="sidebar-section-header" style="padding: 10px 16px 6px; font-size: 0.75rem; font-weight: 800; color: #42dcd7; letter-spacing: 0.5px; text-transform: uppercase; display: flex; align-items: center; justify-content: space-between;">
                 <span><i class="fa-solid fa-comments"></i> Direct Chats (${directChats.length})</span>
-                <button onclick="startNewConversation()" title="Start Direct Chat" style="background: transparent; border: none; color: #a78bfa; cursor: pointer; font-size: 0.8rem;"><i class="fa-solid fa-plus"></i></button>
+                <button onclick="startNewConversation()" title="Start Direct Chat" style="background: transparent; border: none; color: #42dcd7; cursor: pointer; font-size: 0.85rem;"><i class="fa-solid fa-plus"></i></button>
             </div>
         `;
         if (directChats.length === 0) {
-            html += `<div style="padding: 10px 16px; font-size: 0.78rem; color: var(--text-muted); font-style: italic;">No direct chats yet</div>`;
+            html += `<div style="padding: 10px 16px; font-size: 0.78rem; color: #ffffff; font-style: italic;">No direct chats yet</div>`;
         } else {
             html += directChats.map(conv => renderThreadItem(conv, false)).join('');
         }
 
         // Monitored Pod Chats Section
         html += `
-            <div class="sidebar-section-header" style="padding: 16px 16px 6px; font-size: 0.72rem; font-weight: 800; color: #fbbf24; letter-spacing: 0.5px; text-transform: uppercase; display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--border-color); margin-top: 10px;">
+            <div class="sidebar-section-header" style="padding: 16px 16px 6px; font-size: 0.75rem; font-weight: 800; color: #ffffff; letter-spacing: 0.5px; text-transform: uppercase; display: flex; align-items: center; justify-content: space-between; border-top: 1px solid rgba(255,255,255,0.2); margin-top: 10px;">
                 <span><i class="fa-solid fa-eye"></i> Monitored Care Pods (${monitoredChats.length})</span>
             </div>
         `;
         if (monitoredChats.length === 0) {
-            html += `<div style="padding: 10px 16px; font-size: 0.78rem; color: var(--text-muted); font-style: italic;">No monitored caregiver-family pods</div>`;
+            html += `<div style="padding: 10px 16px; font-size: 0.78rem; color: #ffffff; font-style: italic;">No monitored caregiver-family pods</div>`;
         } else {
             html += monitoredChats.map(conv => renderThreadItem(conv, true)).join('');
         }
@@ -1200,3 +1200,184 @@ window.addEventListener('beforeunload', function() {
 });
 
 console.log('✅ chatApp.js loaded successfully (no auto-refresh)');
+
+// ============================================================
+// CAMERA CAPTURE MODULE
+// ============================================================
+
+let cameraStream = null;
+let capturedBlob = null;
+
+async function openCameraModal() {
+    if (!activeConversationId) {
+        alert('Please select a conversation first before taking a photo.');
+        return;
+    }
+
+    const modal = document.getElementById('cameraModal');
+    const video = document.getElementById('cameraVideo');
+    const canvas = document.getElementById('cameraCanvas');
+    const preview = document.getElementById('photoCapturedPreview');
+    const captionWrap = document.getElementById('cameraCaptionWrap');
+    const captionInput = document.getElementById('cameraCaptionInput');
+    const snapBtn = document.getElementById('snapPhotoBtn');
+    const retakeBtn = document.getElementById('retakePhotoBtn');
+    const sendBtn = document.getElementById('sendPhotoBtn');
+    const loadingNotice = document.getElementById('cameraLoadingNotice');
+
+    if (!modal || !video) return;
+
+    // Reset camera state
+    capturedBlob = null;
+    if (captionInput) captionInput.value = '';
+    if (preview) preview.classList.add('hidden');
+    if (canvas) canvas.classList.add('hidden');
+    if (captionWrap) captionWrap.classList.add('hidden');
+    if (retakeBtn) retakeBtn.classList.add('hidden');
+    if (sendBtn) sendBtn.classList.add('hidden');
+    if (snapBtn) snapBtn.classList.remove('hidden');
+    if (video) video.classList.remove('hidden');
+
+    modal.classList.remove('hidden');
+    if (loadingNotice) loadingNotice.classList.remove('hidden');
+
+    try {
+        cameraStream = await navigator.mediaDevices.getUserMedia({
+            video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } },
+            audio: false
+        });
+        video.srcObject = cameraStream;
+        await video.play();
+        if (loadingNotice) loadingNotice.classList.add('hidden');
+    } catch (err) {
+        console.error('Camera access error:', err);
+        if (loadingNotice) loadingNotice.classList.add('hidden');
+        alert('Unable to access camera. Please allow camera permissions in your browser.');
+        closeCameraModal();
+    }
+}
+
+function snapCameraPhoto() {
+    const video = document.getElementById('cameraVideo');
+    const canvas = document.getElementById('cameraCanvas');
+    const preview = document.getElementById('photoCapturedPreview');
+    const captionWrap = document.getElementById('cameraCaptionWrap');
+    const snapBtn = document.getElementById('snapPhotoBtn');
+    const retakeBtn = document.getElementById('retakePhotoBtn');
+    const sendBtn = document.getElementById('sendPhotoBtn');
+
+    if (!video || !canvas) return;
+
+    const width = video.videoWidth || 640;
+    const height = video.videoHeight || 480;
+
+    canvas.width = width;
+    canvas.height = height;
+
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0, width, height);
+
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+    
+    if (preview) {
+        preview.src = dataUrl;
+        preview.classList.remove('hidden');
+    }
+    
+    if (video) video.classList.add('hidden');
+
+    canvas.toBlob((blob) => {
+        capturedBlob = blob;
+    }, 'image/jpeg', 0.9);
+
+    if (captionWrap) captionWrap.classList.remove('hidden');
+    if (snapBtn) snapBtn.classList.add('hidden');
+    if (retakeBtn) retakeBtn.classList.remove('hidden');
+    if (sendBtn) sendBtn.classList.remove('hidden');
+}
+
+function retakeCameraPhoto() {
+    const video = document.getElementById('cameraVideo');
+    const preview = document.getElementById('photoCapturedPreview');
+    const captionWrap = document.getElementById('cameraCaptionWrap');
+    const snapBtn = document.getElementById('snapPhotoBtn');
+    const retakeBtn = document.getElementById('retakePhotoBtn');
+    const sendBtn = document.getElementById('sendPhotoBtn');
+
+    capturedBlob = null;
+
+    if (preview) preview.classList.add('hidden');
+    if (captionWrap) captionWrap.classList.add('hidden');
+    if (retakeBtn) retakeBtn.classList.add('hidden');
+    if (sendBtn) sendBtn.classList.add('hidden');
+    if (snapBtn) snapBtn.classList.remove('hidden');
+    if (video) video.classList.remove('hidden');
+}
+
+async function sendCameraPhoto() {
+    const sendBtn = document.getElementById('sendPhotoBtn');
+
+    if (!capturedBlob) {
+        const canvas = document.getElementById('cameraCanvas');
+        if (canvas) {
+            await new Promise((resolve) => {
+                canvas.toBlob((blob) => {
+                    capturedBlob = blob;
+                    resolve();
+                }, 'image/jpeg', 0.9);
+            });
+        }
+    }
+
+    if (!capturedBlob) {
+        alert('No photo captured. Please snap a picture first.');
+        return;
+    }
+
+    if (sendBtn) {
+        sendBtn.disabled = true;
+        sendBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Sending...';
+    }
+
+    const captionInput = document.getElementById('cameraCaptionInput');
+    const caption = captionInput ? captionInput.value.trim() : '';
+
+    const photoFile = new File([capturedBlob], `photo_${Date.now()}.jpg`, { type: 'image/jpeg' });
+
+    selectedFile = photoFile;
+    const inputField = document.getElementById('messageTextInput');
+    if (inputField && caption) {
+        inputField.value = caption;
+    }
+
+    closeCameraModal();
+
+    if (window.sendMessage) {
+        await window.sendMessage();
+    }
+
+    if (sendBtn) {
+        sendBtn.disabled = false;
+        sendBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Send Photo';
+    }
+}
+
+function closeCameraModal(e) {
+    if (e && e.target !== document.getElementById('cameraModal') && !e.target.closest('.close-modal-btn')) {
+        if (e.target !== e.currentTarget) return;
+    }
+
+    if (cameraStream) {
+        cameraStream.getTracks().forEach(track => track.stop());
+        cameraStream = null;
+    }
+
+    const modal = document.getElementById('cameraModal');
+    if (modal) modal.classList.add('hidden');
+}
+
+window.openCameraModal = openCameraModal;
+window.snapCameraPhoto = snapCameraPhoto;
+window.retakeCameraPhoto = retakeCameraPhoto;
+window.sendCameraPhoto = sendCameraPhoto;
+window.closeCameraModal = closeCameraModal;
