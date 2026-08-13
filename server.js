@@ -24,6 +24,11 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname)));
 
+// Health Check Endpoint
+app.get('/api/health', (req, res) => {
+    res.json({ ok: true, timestamp: new Date().toISOString() });
+});
+
 // ============================================================
 // FILE SYSTEM SETUP
 // ============================================================
