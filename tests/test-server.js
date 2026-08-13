@@ -298,5 +298,61 @@ test('Full System API Integration Suite', async () => {
     headers: { Authorization: `Bearer ${caregiverToken}` }
   });
   assert.equal(caregiverViewAdminFamilyMsgs.response.status, 403);
+
+  // 21. Profile Update - Caregiver updating profile details
+  const updateProfile = await request('/api/users/profile', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${caregiverToken}`
+    },
+    body: JSON.stringify({ name: 'Ava Thompson Updated', phoneNumber: '+1 604 555 9999' })
+  });
+  assert.equal(updateProfile.response.status, 200);
+  assert.equal(updateProfile.body.user.name, 'Ava Thompson Updated');
+
+  // 22. Admin - Pause Conversation
+  const pauseConv = await request('/api/conversations/status', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${adminToken}`
+    },
+    body: JSON.stringify({ conversationId: convId, status: 'paused' })
+  });
+  assert.equal(pauseConv.response.status, 200);
+  assert.equal(pauseConv.body.status, 'paused');
+
+  // 23. Messaging in Paused Conversation - Should return 403 Forbidden
+  const sendInPausedConv = await request('/api/messages', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${caregiverToken}`
+    },
+    body: JSON.stringify({ conversationId: convId, text: 'This should fail' })
+  });
+  assert.equal(sendInPausedConv.response.status, 403);
+
+  // 24. Admin - Resume Conversation
+  const resumeConv = await request('/api/conversations/status', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${adminToken}`
+    },
+    body: JSON.stringify({ conversationId: convId, status: 'active' })
+  });
+  assert.equal(resumeConv.response.status, 200);
+  assert.equal(resumeConv.body.status, 'active');
+
+  // 25. Auth - Logout
+  const logoutRes = await request('/api/auth/logout', {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${caregiverToken}` }
+  });
+  assert.equal(logoutRes.response.status, 200);
+  assert.equal(logoutRes.body.success, true);
 });
+
 

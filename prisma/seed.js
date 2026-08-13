@@ -1,3 +1,6 @@
+if (!process.env.DATABASE_URL) {
+  process.env.DATABASE_URL = 'file:./dev.db';
+}
 const { PrismaClient, UserRole, ShiftStatus, PodRole } = require('@prisma/client');
 const crypto = require('crypto');
 

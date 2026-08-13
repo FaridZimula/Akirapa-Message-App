@@ -1,3 +1,6 @@
+if (!process.env.DATABASE_URL) {
+  process.env.DATABASE_URL = 'file:./dev.db';
+}
 import { PrismaClient, UserRole, ShiftStatus, PodRole } from '@prisma/client';
 import { encrypt } from '../src/lib/crypto';
 

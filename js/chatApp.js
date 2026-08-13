@@ -12,6 +12,7 @@ let eventSource = null;
 let socket = null;
 let lastInitializedUserId = null;
 let chatInitialized = false;
+let reconnectAttempts = 0;
 
 window.resetChatApp = function() {
     console.log('🧹 Resetting chat application state...');
